@@ -16,8 +16,8 @@
 using uchar=unsigned char;
 __global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1)
 {
-  int row   = threadIdx.x + blockIdx.x * blockDim.x ;
-  int col   = threadIdx.y + blockIdx.y * blockDim.y ;
+  int col   = threadIdx.x + blockIdx.x * blockDim.x ;
+  int row   = threadIdx.y + blockIdx.y * blockDim.y ;
   int depth = threadIdx.z ;
 
   if(row < iHeight && col < iWidth)
@@ -31,7 +31,7 @@ __global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, i
         int iRow = row + i;
         int iCol = col + j;
         
-        if( (iRow >= 0 && iRow <= iHeight ) && (iCol >= 0 && iCol <= iWidth ) )
+        if( (iRow >= 0 && iRow < iHeight ) && (iCol >= 0 && iCol < iWidth ) )
         {
           int index = (iRow*iWidth + iCol)*iChannels;
          
@@ -85,7 +85,7 @@ namespace Filters {
   {
 
     std::cout << "Kernel Launcher" << std::endl;
-    dim3 oGridDim(m_iGridDimY,m_iGridDimX, 1);
+    dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
     dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
     
     uchar* pIn_d;
