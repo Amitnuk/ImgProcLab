@@ -28,17 +28,22 @@ int main(int argc, char* argv[]) {
   cv::imshow("Original", mImage);
 
 
-  Filters::AverageFilter oAvgFilter;
-
-  int iWidth  = mImage.cols;
-  int iHeight = mImage.rows; 
-  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
-  uchar* pOut = new uchar[iHeight*iHeight*3];
-
-  oAvgFilter.KernelLauncher(pIn, pOut);
-
   
+  int N = 16;
+  int iWidth  = mImage.cols;
+  int iHeight = mImage.rows;
+  Filters::AverageFilter oAvgFilter(iWidth, iHeight, 3, 16, 3);
+  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
+  uchar* pOut = new uchar[iWidth*iHeight*3];
+
+  oAvgFilter.KernelLauncher(pIn, pOut );
+  
+  cv::Mat mImageFiltered(iHeight, iWidth, CV_8UC3, pOut);
+  
+  //cv::Mat blur(iHeight, iWidth, CV_8UC3, out_h);
+
+  cv::imshow("Filtered", mImageFiltered);
   cv::waitKey(0);  
-    
+  delete[] pOut;
   return 0;  
 }  
