@@ -1,15 +1,20 @@
-#ifndef FILTERS_H
-#define FILTERS_H
+#pragma once
 
-class AverageFilter {
+namespace Filters{
+  class AverageFilter {
+    
+  public:
+    AverageFilter(int iGridDim = 1,
+		  int iBlockDim = 32,
+		  int iKernelSize = 3);
+    ~AverageFilter() = default;
+    void KernelLauncher(unsigned char* pIn, unsigned char* pOut);
+    
+  private:
+    int m_iGridDim;
+    int m_iBlockDim;
+    int m_iKernelSize;
+  };  
+}
 
-public:
-  AverageFilter();
- ~AverageFilter() = default;  
-  void KernelLauncher();
-  
-};  
 
-
-
-#endif

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   uchar* pOut = new uchar[iHeight*iHeight*3];
 
   oAvgFilter.KernelLauncher(pIn, pOut);
-
+  
   
   cv::waitKey(0);  
     
