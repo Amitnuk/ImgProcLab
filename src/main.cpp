@@ -29,12 +29,15 @@ int main(int argc, char* argv[]) {
 
 
   
-  int N = 16;
   int iWidth  = mImage.cols;
   int iHeight = mImage.rows;
-  Filters::AverageFilter oAvgFilter(iWidth, iHeight, 3, 16, 3);
+  int iChannels = 3;
+  int iThreads = 16;
+  int iKernel = 2;
+
+  Filters::AverageFilter oAvgFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
-  uchar* pOut = new uchar[iWidth*iHeight*3];
+  uchar* pOut = new uchar[iWidth*iHeight*iChannels];
 
   oAvgFilter.KernelLauncher(pIn, pOut );
   
