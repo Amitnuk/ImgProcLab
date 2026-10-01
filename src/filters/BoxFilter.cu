@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "Filters.cuh"
+#include "imgproc/filters/BoxFilter.hpp"
 
 
 
@@ -14,13 +14,13 @@
 
 
 using uchar=unsigned char;
-__global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1)
+__global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
   int depth = threadIdx.z ;
 
-  if(row < iHeight && col < iWidth)
+  if( row < iHeight && col < iWidth )
   {
     int iNbPixels = 0;
     int iPixelValue = 0;
@@ -31,59 +31,39 @@ __global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, i
         int iRow = row + i;
         int iCol = col + j;
         
-        if( (iRow >= 0 && iRow < iHeight ) && (iCol >= 0 && iCol < iWidth ) )
+        if( ( iRow >= 0 && iRow < iHeight ) && ( iCol >= 0 && iCol < iWidth ) )
         {
-          int index = (iRow*iWidth + iCol)*iChannels;
-         
+          int index = ( iRow*iWidth + iCol )*iChannels;
           iPixelValue += pIn[index + depth];
           ++iNbPixels; 
-          
-
         }
-        
       }
-      
     }
     int index = (row*iWidth + col)*iChannels;
     pOut[index + depth] = static_cast<uchar>(iPixelValue/iNbPixels);
-  }
-  
- 
-  
-
-  
-  
-    
+  }  
 }
 
 
 
-namespace Filters {
-
-  
+namespace ImgProc {
 
 
-
-  AverageFilter::AverageFilter(int iWidth,
-                               int iHeight,
-                               int iChannels,
-                               int iThreads,
-                               int iKernelSize)
-      : m_iWidth(iWidth)
-      , m_iHeight(iHeight)
-      , m_iChannels(iChannels)
-      , m_iThreads(iThreads)
-      , m_iKernelSize(iKernelSize)
-    {
-      m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
-      m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
-      std::cout << "Average Filter" << std::endl; 
-    }
-
-  void AverageFilter::KernelLauncher(const uchar* pIn_h,
-                                     uchar* pOut_h)
+  BoxFilter::BoxFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
+    : m_iWidth(iWidth)
+    , m_iHeight(iHeight)
+    , m_iChannels(iChannels)
+    , m_iThreads(iThreads)
+    , m_iKernelSize(iKernelSize)
   {
-
+    m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
+    m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
+    std::cout << "Average Filter" << std::endl; 
+  }
+  
+  void BoxFilter::KernelLauncher(const uchar* pIn_h,uchar* pOut_h)
+  {
+    
     std::cout << "Kernel Launcher" << std::endl;
     dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
     dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
@@ -91,11 +71,11 @@ namespace Filters {
     uchar* pIn_d;
     uchar* pOut_d;
     int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(uchar);
-
+    
     CUDA_CALL(cudaMalloc((void**)&pOut_d, iSize ));
     CUDA_CALL(cudaMalloc((void**)&pIn_d, iSize ));
     CUDA_CALL(cudaMemcpy(pIn_d, pIn_h, iSize, cudaMemcpyHostToDevice));
-
+    
 
 
     cudaEvent_t oStart, oStop;

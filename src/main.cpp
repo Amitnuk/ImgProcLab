@@ -4,7 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <chrono>
-#include "Filters.cuh"
+#include "imgproc/filters/BoxFilter.hpp"
 
 
 int main(int argc, char* argv[]) {
@@ -35,17 +35,16 @@ int main(int argc, char* argv[]) {
   int iThreads = 16;
   int iKernel = 2;
 
-  Filters::AverageFilter oAvgFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  
+  ImgProc::BoxFilter oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels];
 
-  oAvgFilter.KernelLauncher(pIn, pOut );
+  oBoxFilter.KernelLauncher(pIn, pOut);
   
-  cv::Mat mImageFiltered(iHeight, iWidth, CV_8UC3, pOut);
-  
-  //cv::Mat blur(iHeight, iWidth, CV_8UC3, out_h);
+  cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
 
-  cv::imshow("Filtered", mImageFiltered);
+  cv::imshow("Box Filter", mAvgFilter);
   cv::waitKey(0);  
   delete[] pOut;
   return 0;  

@@ -7,11 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CUDA_ARCHITECTURES 89)
+set(CMAKE_CUDA_ARCHITECTURES native)
 
 find_package(OpenCV REQUIRED)
-add_executable(ImgProcLab ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-                          ${CMAKE_CURRENT_SOURCE_DIR}/src/Filters.cu)
+add_executable(ImgProcLab
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/BoxFilter.cu
+	      ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/BoxFilter.hpp
+	      ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/BaseFilter.hpp )
 
 
 
