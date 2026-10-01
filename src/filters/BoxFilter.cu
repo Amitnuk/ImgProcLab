@@ -60,8 +60,6 @@ namespace ImgProc {
     dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
     dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
     
-    uchar* pIn_d;
-    uchar* pOut_d;
     int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(uchar);
 
     CudaBuffer<uchar> oCudaBufferIn(iSize);
@@ -71,6 +69,7 @@ namespace ImgProc {
 
     cudaEvent_t oStart, oStop;
     float fTimeInMS;
+
     CUDA_CALL(cudaEventCreate(&oStart));
     CUDA_CALL(cudaEventCreate(&oStop));
     CUDA_CALL(cudaEventRecord(oStart));
