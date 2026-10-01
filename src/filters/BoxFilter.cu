@@ -1,20 +1,12 @@
 #include <iostream>
 #include <stdio.h>
 #include "imgproc/filters/BoxFilter.hpp"
+#include "cuda/CudaUtils.hpp"
+#include "cuda/CudaBuffer.hpp"
 
+using uchar = unsigned char;
 
-
-#define CUDA_CALL( call )         \ 
-{                                  \
-  cudaError_t err = call;           \
-  if( err != cudaSuccess )          \ 
-    std::cerr << "Cuda Error " << err << "in " << __FILE__ <<":"<<__LINE__ << " : " << cudaGetErrorString(err) << " ( "<< #call << " ) " << std::endl ;\
-} \
-
-
-
-using uchar=unsigned char;
-__global__ void AverageFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
+__global__ void BoxFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
@@ -61,7 +53,7 @@ namespace ImgProc {
     std::cout << "Average Filter" << std::endl; 
   }
   
-  void BoxFilter::KernelLauncher(const uchar* pIn_h,uchar* pOut_h)
+  void BoxFilter::KernelLauncher(const uchar* pIn_h, uchar* pOut_h)
   {
     
     std::cout << "Kernel Launcher" << std::endl;
@@ -71,42 +63,30 @@ namespace ImgProc {
     uchar* pIn_d;
     uchar* pOut_d;
     int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(uchar);
-    
-    CUDA_CALL(cudaMalloc((void**)&pOut_d, iSize ));
-    CUDA_CALL(cudaMalloc((void**)&pIn_d, iSize ));
-    CUDA_CALL(cudaMemcpy(pIn_d, pIn_h, iSize, cudaMemcpyHostToDevice));
-    
 
+    CudaBuffer<uchar> oCudaBufferIn(iSize);
+    CudaBuffer<uchar> oCudaBufferOut(iSize);
+
+    oCudaBufferIn.copyFromHost(pIn_h, iSize);
 
     cudaEvent_t oStart, oStop;
-
-
+    float fTimeInMS;
     CUDA_CALL(cudaEventCreate(&oStart));
     CUDA_CALL(cudaEventCreate(&oStop));
     CUDA_CALL(cudaEventRecord(oStart));
 
-    AverageFilterKernel<<<oGridDim, oBlockDim>>>(pIn_d, pOut_d, m_iWidth, m_iHeight, m_iChannels, m_iKernelSize);
-  
-    CUDA_CALL(cudaGetLastError());
-    CUDA_CALL(cudaDeviceSynchronize());
-
+    BoxFilterKernel<<<oGridDim, oBlockDim>>>(oCudaBufferIn.Data(), oCudaBufferOut.Data(), m_iWidth, m_iHeight, m_iChannels, m_iKernelSize);
 
     CUDA_CALL(cudaEventRecord(oStop));
     CUDA_CALL(cudaEventSynchronize(oStop));
-
-    float fTimeInMS;
+  
     CUDA_CALL(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
-
-   
-    
-
     std::cout << "CUDA kernel: " << fTimeInMS << " ms\n";
 
-    CUDA_CALL(cudaMemcpy(pOut_h, pOut_d, iSize, cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaGetLastError());
+    CUDA_CALL(cudaDeviceSynchronize());
 
-    
-
-    CUDA_CALL(cudaFree(pIn_d));
-    CUDA_CALL(cudaFree(pOut_d));
+  
+    oCudaBufferOut.copyFromDevice(pOut_h, iSize);
   }
 }
