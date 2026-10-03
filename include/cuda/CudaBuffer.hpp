@@ -1,17 +1,27 @@
 #ifndef CUDABUFFER_HPP
 #define CUDABUFFER_HPP
-#include "CudaUtils.hpp"
+#include <iostream>
 #include <cassert>
 #include <cstddef> //for std::size_t
+#include "CudaUtils.hpp"
 
 template <typename T>
 class CudaBuffer{
 public :
-  explicit CudaBuffer(std::size_t iSize)
+  explicit CudaBuffer(std::size_t iSize = 0)
       : m_pData(nullptr)
       , m_iSize(iSize)        
   {
-    this->allocate();
+    if(m_iSize > 0)
+    {
+      this->allocate();
+    }
+    else
+    {
+      std::cout << "[ERROR]: did not initialize CUDA BUFFER" << std::endl;
+      return;
+    }
+    
   }
 
   ~CudaBuffer() { cudaFree(m_pData); }
@@ -19,8 +29,8 @@ public :
   inline T* Data() { return m_pData; }
   inline const T* Data() const { return m_pData; }
   
-  void copyFromHost(const T* pData_h,  std::size_t iSize);
-  void copyFromDevice(T* pData_h, std::size_t iSize);
+  void copyFromHost(const T* pData_h);
+  void copyFromDevice(T* pData_h);
   
 private:
   T* m_pData;
@@ -37,29 +47,18 @@ void CudaBuffer<T>::allocate() {
 }
 
 template <typename T>
-void CudaBuffer<T>::copyFromHost(const T* pData_h, std::size_t iSize) {
-  assert(iSize == m_iSize);
-  if (iSize != m_iSize) {
-    std::cout << "[WARNING]: Array Size MisMatch" << std::endl;
-    return ;
-  }
+void CudaBuffer<T>::copyFromHost(const T* pData_h) {
   
-  CUDA_CALL(cudaMemcpy(m_pData, pData_h, iSize, cudaMemcpyHostToDevice));
+  CUDA_CALL(cudaMemcpy(m_pData, pData_h, m_iSize, cudaMemcpyHostToDevice));
   CUDA_CALL(cudaGetLastError());
 }
 
 
 
 template <typename T>
-void CudaBuffer<T>::copyFromDevice(T* pData_h, std::size_t iSize) {
+void CudaBuffer<T>::copyFromDevice(T* pData_h) {
 
-  assert(iSize == m_iSize);
-  if (iSize != m_iSize) {
-    std::cout << "[WARNING]: Array Size MisMatch" << std::endl;
-    return ;
-  }
-  
-  CUDA_CALL(cudaMemcpy(pData_h, m_pData , iSize, cudaMemcpyDeviceToHost));
+  CUDA_CALL(cudaMemcpy(pData_h, m_pData , m_iSize, cudaMemcpyDeviceToHost));
   CUDA_CALL(cudaGetLastError());
 
 }

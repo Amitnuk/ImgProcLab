@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdio.h>
 #include "imgproc/filters/BoxFilter.hpp"
-#include "cuda/CudaUtils.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 using uchar = unsigned char;
@@ -65,7 +64,7 @@ namespace ImgProc {
     CudaBuffer<uchar> oCudaBufferIn(iSize);
     CudaBuffer<uchar> oCudaBufferOut(iSize);
 
-    oCudaBufferIn.copyFromHost(pIn_h, iSize);
+    oCudaBufferIn.copyFromHost(pIn_h);
 
     cudaEvent_t oStart, oStop;
     float fTimeInMS;
@@ -86,6 +85,6 @@ namespace ImgProc {
     CUDA_CALL(cudaDeviceSynchronize());
 
   
-    oCudaBufferOut.copyFromDevice(pOut_h, iSize);
+    oCudaBufferOut.copyFromDevice(pOut_h);
   }
 }

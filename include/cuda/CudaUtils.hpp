@@ -1,5 +1,4 @@
 #pragma once 
-#include <iostream>
 
 #define CUDA_CALL( call )\
 {\

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include "imgproc/filters/BoxFilter.hpp"
+#include "imgproc/filters/GaussianFilter.hpp"
 
 
 int main(int argc, char* argv[]) {
@@ -33,14 +34,15 @@ int main(int argc, char* argv[]) {
   int iHeight = mImage.rows;
   int iChannels = 3;
   int iThreads = 16;
-  int iKernel = 2;
+  int iKernelSize = 3;
+  float fSigma = 3.0f;
 
   
-  ImgProc::BoxFilter oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  ImgProc::GaussianFilter oFilter(iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels];
 
-  oBoxFilter.KernelLauncher(pIn, pOut);
+  oFilter.KernelLauncher(pIn, pOut);
   
   cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
 

@@ -11,10 +11,16 @@ set(CMAKE_CUDA_ARCHITECTURES native)
 
 find_package(OpenCV REQUIRED)
 add_executable(ImgProcLab
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp 
+
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/BaseFilter.hpp
+
               ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/BoxFilter.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/BoxFilter.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/BaseFilter.hpp
+
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/GaussianFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/GaussianFilter.hpp
+
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaUtils.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)
 
