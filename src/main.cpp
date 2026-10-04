@@ -40,6 +40,29 @@ void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannel
 
 }
 
+void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel = 3)
+{
+  cv::Mat mImgGray;
+  cv::cvtColor(mImage, mImgGray, cv::COLOR_BGR2GRAY);
+  cv::imshow("Gray", mImgGray);
+
+  /*  
+  cv::Mat intImage;
+  mImage.convertTo(intImage, CV_32SC3);
+  
+  int* pIn  = intImage.reshape(1,1).ptr<int>(0);
+  ImgProc::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
+  int* pOut = new int[iWidth*iHeight*iChannels];
+  oGaussianFilter.KernelLauncher(pIn, pOut);
+  cv::Mat displayImageGaussianFilter;
+  cv::Mat mGaussianFilter(iHeight, iWidth, CV_32SC3, pOut);
+  mGaussianFilter.convertTo(displayImageGaussianFilter, CV_8UC3);
+  cv::imshow("Gaussian Filter", displayImageGaussianFilter);
+
+  delete [] pOut;
+  */
+}
+
 int main(int argc, char* argv[]) {
 
   
@@ -70,7 +93,7 @@ int main(int argc, char* argv[]) {
 
   iKernelSize = 7;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
-  
+  SobelFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize);
   
 
   

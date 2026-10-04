@@ -21,6 +21,10 @@ add_executable(ImgProcLab
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/GaussianFilter.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/GaussianFilter.hpp
 
+
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/SobelFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/SobelFilter.hpp
+
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaUtils.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)
 

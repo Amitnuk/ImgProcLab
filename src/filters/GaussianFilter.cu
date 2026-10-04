@@ -80,8 +80,8 @@ namespace ImgProc
         std::cout << "[WARNING] : A KERNEL SIZE SHOULD BE A ODD NUMBER SUP THAN 1, eg 3, 5, 7, 9, ..., 2*n+1" << std::endl;
       }
       createGaussianKernel();
-      m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
-      m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
+      m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
+      m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
     }
     template <typename T, typename U>
     void GaussianFilter<T,U>::createGaussianKernel()
