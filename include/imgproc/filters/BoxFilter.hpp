@@ -2,13 +2,14 @@
 #include "imgproc/BaseFilter.hpp"
 
 namespace ImgProc{
-  class BoxFilter : public BaseFilter{
+  template <typename T, typename U>
+  class BoxFilter : public BaseFilter<T,U>{
     
   public:
     explicit BoxFilter( int iWidth = 1, int iHeight = 32,int iChannels = 3,int iThreads = 16,int iKernelSize = 1);
     virtual ~BoxFilter() = default;
-    virtual void KernelLauncher(const unsigned char* pIn_h, unsigned char* pOut_h) override;
-    virtual void CPULauncher(const unsigned char* pIn_h, unsigned char* pOut_h) override {};
+    virtual void KernelLauncher(const T* pIn_h, U* pOut_h) override;
+    virtual void CPULauncher(const T* pIn_h, U* pOut_h) override {};
   private:
     int m_iWidth;
     int m_iHeight;
@@ -21,5 +22,4 @@ namespace ImgProc{
     
   };  
 }
-
 

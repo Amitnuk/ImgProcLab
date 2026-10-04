@@ -5,7 +5,8 @@
 
 using uchar = unsigned char;
 
-__global__ void BoxFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
+template <class T, class U >
+__global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
@@ -31,7 +32,7 @@ __global__ void BoxFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int i
       }
     }
     int index = (row*iWidth + col)*iChannels;
-    pOut[index + depth] = static_cast<uchar>(iPixelValue/iNbPixels);
+    pOut[index + depth] = static_cast<U>(iPixelValue/iNbPixels);
   }  
 }
 
@@ -39,8 +40,8 @@ __global__ void BoxFilterKernel(const uchar* pIn, uchar* pOut, int iWidth, int i
 
 namespace ImgProc {
 
-
-  BoxFilter::BoxFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
+  template<typename T, typename U>
+  BoxFilter<T,U>::BoxFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
     : m_iWidth(iWidth)
     , m_iHeight(iHeight)
     , m_iChannels(iChannels)
@@ -52,17 +53,18 @@ namespace ImgProc {
     std::cout << "Average Filter" << std::endl; 
   }
   
-  void BoxFilter::KernelLauncher(const uchar* pIn_h, uchar* pOut_h)
+  template<typename T, typename U>
+  void BoxFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
   {
     
     std::cout << "Kernel Launcher" << std::endl;
     dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
     dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
     
-    int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(uchar);
+    int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(U);
 
-    CudaBuffer<uchar> oCudaBufferIn(iSize);
-    CudaBuffer<uchar> oCudaBufferOut(iSize);
+    CudaBuffer<T> oCudaBufferIn(iSize);
+    CudaBuffer<U> oCudaBufferOut(iSize);
 
     oCudaBufferIn.copyFromHost(pIn_h);
 
@@ -73,7 +75,7 @@ namespace ImgProc {
     CUDA_CALL(cudaEventCreate(&oStop));
     CUDA_CALL(cudaEventRecord(oStart));
 
-    BoxFilterKernel<<<oGridDim, oBlockDim>>>(oCudaBufferIn.Data(), oCudaBufferOut.Data(), m_iWidth, m_iHeight, m_iChannels, m_iKernelSize);
+    BoxFilterKernel<T,U><<<oGridDim, oBlockDim>>>(oCudaBufferIn.Data(), oCudaBufferOut.Data(), m_iWidth, m_iHeight, m_iChannels, m_iKernelSize);
 
     CUDA_CALL(cudaEventRecord(oStop));
     CUDA_CALL(cudaEventSynchronize(oStop));
@@ -87,4 +89,9 @@ namespace ImgProc {
   
     oCudaBufferOut.copyFromDevice(pOut_h);
   }
+
+
+  template class BoxFilter<uchar, uchar>;
+
+
 }

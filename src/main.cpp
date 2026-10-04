@@ -6,7 +6,39 @@
 #include <chrono>
 #include "imgproc/filters/BoxFilter.hpp"
 #include "imgproc/filters/GaussianFilter.hpp"
+#include <vector>
 
+
+void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel )
+{
+   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
+
+  ImgProc::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
+  oBoxFilter.KernelLauncher(pIn, pOut);
+  cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
+  cv::imshow("Box Filter", mAvgFilter);
+
+  delete[] pOut;
+}
+
+void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel, float fSigma )
+{
+  cv::Mat intImage;
+  mImage.convertTo(intImage, CV_32SC3);
+  
+  int* pIn  = intImage.reshape(1,1).ptr<int>(0);
+  ImgProc::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
+  int* pOut = new int[iWidth*iHeight*iChannels];
+  oGaussianFilter.KernelLauncher(pIn, pOut);
+  cv::Mat displayImageGaussianFilter;
+  cv::Mat mGaussianFilter(iHeight, iWidth, CV_32SC3, pOut);
+  mGaussianFilter.convertTo(displayImageGaussianFilter, CV_8UC3);
+  cv::imshow("Gaussian Filter", displayImageGaussianFilter);
+
+  delete [] pOut;
+
+}
 
 int main(int argc, char* argv[]) {
 
@@ -24,30 +56,24 @@ int main(int argc, char* argv[]) {
     std::cout << "Failed to load, check that " << argv[1] << " does exits" << std::endl;
   }
 
-
-
   cv::imshow("Original", mImage);
-
-
-  
   int iWidth  = mImage.cols;
   int iHeight = mImage.rows;
   int iChannels = 3;
   int iThreads = 16;
   int iKernelSize = 3;
-  float fSigma = 3.0f;
+  float fSigma = 0.25f;
+
 
   
-  ImgProc::GaussianFilter oFilter(iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
-  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
-  uchar* pOut = new uchar[iWidth*iHeight*iChannels];
+  BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
-  oFilter.KernelLauncher(pIn, pOut);
+  iKernelSize = 7;
+  GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
   
-  cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
+  
 
-  cv::imshow("Box Filter", mAvgFilter);
+  
   cv::waitKey(0);  
-  delete[] pOut;
   return 0;  
 }  
