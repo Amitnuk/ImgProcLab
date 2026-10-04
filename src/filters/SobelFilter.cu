@@ -9,14 +9,49 @@ using uchar = unsigned char;
 
 
 template<typename T, typename U, typename V>
-__global__ void SobelFilterKernel(const T* pIn, U* pOut, V* pKernelX,  V* pKernelY, int iHeight, int iWidth, std::size_t iKernelSize=3)
+__global__ void SobelFilterKernel(const T* pIn, U* pOut, V* pKernelX,  V* pKernelY, int iHeight, int iWidth, std::size_t iKernelSize=3, std::size_t fKernelFactor = 8.0f)
 {
-  int col = threadIdx.x + blockIdx.x * blockDim.x ;
-  int row = threadIdx.y + blockIdx.y * blockDim.y ;
-
-  if(col < iWidth && row < iHeight)
+  int Col = threadIdx.x + blockIdx.x * blockDim.x ;
+  int Row = threadIdx.y + blockIdx.y * blockDim.y ;
+  
+  if(Col < iWidth && Row < iHeight)
   {
+    int iKernel = iKernelSize/2; 
+    int iPixelValueX = 0;
+    int iPixelValueY = 0;
+    float fPixelValue = 0.0f;
 
+    for(int u = -iKernel; u <= iKernel; ++u)
+    {
+      for (int v = -iKernel; v <= iKernel; ++v)
+      {
+        int iRow = Row + u;
+        int iCol = Col + v;
+
+        if( (iRow >= 0 && iRow < iHeight) && (iCol >= 0 && iCol < iWidth ))
+        {
+          int iPixelIndex  = iRow*iWidth + iCol;
+          int iKernelIndex = (u + iKernel)*iKernelSize + (v+iKernel);
+          T tPixelValue = pIn[iPixelIndex];
+          iPixelValueX += tPixelValue*pKernelX[iKernelIndex];
+          iPixelValueY += tPixelValue*pKernelY[iKernelIndex];
+
+        }
+        
+
+      }
+      
+    }
+
+    fPixelValue =
+            sqrtf(
+                static_cast<float>(iPixelValueX * iPixelValueX) +
+                static_cast<float>(iPixelValueY * iPixelValueY)
+            )/fKernelFactor;
+
+    int iPixelIndex = Row*iWidth + Col;
+    pOut[iPixelIndex] = static_cast<U>(fPixelValue);
+    
   }
 
 }
@@ -33,6 +68,7 @@ namespace ImgProc{
     , m_iHeight(iHeight)
     , m_iThreads(iThreads)
     , m_iKernelSize(iKernelSize)
+    , m_fNormalizingFactor(0.0f)
     , m_aKernelX(iKernelSize,iKernelSize, 1)
     , m_aKernelY(iKernelSize,iKernelSize, 1)
   {
@@ -69,23 +105,41 @@ namespace ImgProc{
 		      
 		    };
     
+        
     if (m_iKernelSize < 3 || m_iKernelSize % 2 == 0)
     {
       throw std::invalid_argument("m_iKernelSize must be odd and >= 3");
     }
-    const int iCenter = (m_iKernelSize-2)/2;
+    const int iCenter = (m_iKernelSize-1)/2;
     for(int i= 0; i < m_iKernelSize; ++i)
     {
       int iSmoothing = binomial( m_iKernelSize-1,i);
       for(int j=0; j < m_iKernelSize; ++j)
       {
         int iDerivative = j - iCenter;
-        m_aKernelX(i,j) = iSmoothing * iDerivative;
-        m_aKernelY(j,i) = iSmoothing * iDerivative;
+        int iValue = iSmoothing * iDerivative;
+        m_fNormalizingFactor +=static_cast<float>(std::abs(iValue));
+        m_aKernelX(i,j) = iValue;
+        m_aKernelY(j,i) = iValue;
       }
     }
     
+    /*
+    for(int i= 0; i < m_iKernelSize; ++i)
+    {
+     
+      for(int j=0; j < m_iKernelSize; ++j)
+      {
+        std::cout << m_aKernelX(i,j) << " " ; 
+      }
+      std::cout  << "\n" ; 
+    }
+   
+    //m_fNormalizingFactor = 1.0f;
+    std::cout << m_fNormalizingFactor << " \n" ; 
+    */
   }
+   
 
   template <typename T, typename U>
   void SobelFilter<T, U>::KernelLauncher(const T *pIn_h, U *pOut_h)
@@ -126,13 +180,14 @@ namespace ImgProc{
                                                           oCudaBufferKernelY.Data(), 
                                                           m_iHeight, 
                                                           m_iWidth, 
-                                                          m_iKernelSize );
+                                                          m_iKernelSize,
+                                                          m_fNormalizingFactor);
 
     CUDA_CALL(cudaEventRecord(oStop));
     CUDA_CALL(cudaEventSynchronize(oStop));
   
     CUDA_CALL(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
-    std::cout << "CUDA kernel: " << fTimeInMS << "s\n";
+    std::cout << "CUDA kernel: " << fTimeInMS << "ms\n";
 
     CUDA_CALL(cudaGetLastError());
     CUDA_CALL(cudaDeviceSynchronize());

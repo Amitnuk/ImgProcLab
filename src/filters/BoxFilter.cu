@@ -81,7 +81,7 @@ namespace ImgProc {
     CUDA_CALL(cudaEventSynchronize(oStop));
   
     CUDA_CALL(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
-    std::cout << "CUDA kernel: " << fTimeInMS << "s\n";
+    std::cout << "CUDA kernel: " << fTimeInMS << "ms\n";
 
     CUDA_CALL(cudaGetLastError());
     CUDA_CALL(cudaDeviceSynchronize());

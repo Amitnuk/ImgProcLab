@@ -20,6 +20,7 @@ namespace ImgProc {
       int m_iHeight;   
       int m_iThreads;
       std::size_t m_iKernelSize;
+      float m_fNormalizingFactor;
       Array<int> m_aKernelX;
       Array<int> m_aKernelY;
       int m_iGridDimX;
