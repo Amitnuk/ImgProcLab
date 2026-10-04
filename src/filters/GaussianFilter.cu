@@ -124,7 +124,7 @@ namespace ImgProc
     template <typename T, typename U>
     void GaussianFilter<T,U>::KernelLauncher(const T* pIn_h,  U* pOut_h)
     {
-        std::cout << "Kernel Launcher" << std::endl;
+        std::cout << "Gaussian Kernel Launcher" << std::endl;
         
         dim3 oGridDim(m_iGridDimX, m_iGridDimY);
         dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
@@ -155,7 +155,7 @@ namespace ImgProc
         CUDA_CALL(cudaEventSynchronize(oStop));
   
         CUDA_CALL(cudaEventElapsedTime(&fTimeInS, oStart, oStop));
-        std::cout << "CUDA kernel: " << fTimeInS << " s\n";
+        std::cout << "CUDA kernel: " << fTimeInS << "s\n";
 
         CUDA_CALL(cudaGetLastError());
         CUDA_CALL(cudaDeviceSynchronize());

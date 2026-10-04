@@ -6,6 +6,7 @@
 #include <chrono>
 #include "imgproc/filters/BoxFilter.hpp"
 #include "imgproc/filters/GaussianFilter.hpp"
+#include "imgproc/filters/SobelFilter.hpp"
 #include <vector>
 
 
@@ -40,12 +41,17 @@ void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannel
 
 }
 
+<<<<<<< HEAD
 void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel = 3)
+=======
+void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, int iKernel = 3)
+>>>>>>> 4e7988d (Introducting SobelFilter)
 {
   cv::Mat mImgGray;
   cv::cvtColor(mImage, mImgGray, cv::COLOR_BGR2GRAY);
   cv::imshow("Gray", mImgGray);
 
+<<<<<<< HEAD
   /*  
   cv::Mat intImage;
   mImage.convertTo(intImage, CV_32SC3);
@@ -54,13 +60,40 @@ void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, 
   ImgProc::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
   int* pOut = new int[iWidth*iHeight*iChannels];
   oGaussianFilter.KernelLauncher(pIn, pOut);
+=======
+   
+  cv::Mat intImage;
+  mImgGray.convertTo(intImage, CV_32SC1);
+  
+  int* pIn  = intImage.reshape(1,1).ptr<int>(0);
+
+  /* 
+  cv::Mat intImageDisplay;
+  intImage.convertTo(intImageDisplay, CV_8UC1);
+  cv::imshow("INIT", intImageDisplay);
+  */
+
+  ImgProc::SobelFilter<int, int> oSobelFilter(iWidth, iHeight, iThreads, iKernel);
+ 
+  int* pOut = new int[iWidth*iHeight];
+  oSobelFilter.KernelLauncher(pIn, pOut);
+
+  /*
+>>>>>>> 4e7988d (Introducting SobelFilter)
   cv::Mat displayImageGaussianFilter;
   cv::Mat mGaussianFilter(iHeight, iWidth, CV_32SC3, pOut);
   mGaussianFilter.convertTo(displayImageGaussianFilter, CV_8UC3);
   cv::imshow("Gaussian Filter", displayImageGaussianFilter);
+<<<<<<< HEAD
 
   delete [] pOut;
   */
+=======
+  */
+ 
+  delete [] pOut;
+
+>>>>>>> 4e7988d (Introducting SobelFilter)
 }
 
 int main(int argc, char* argv[]) {
@@ -93,7 +126,11 @@ int main(int argc, char* argv[]) {
 
   iKernelSize = 7;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
+<<<<<<< HEAD
   SobelFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize);
+=======
+  SobelFilter(mImage, iWidth, iHeight, iThreads, iKernelSize);
+>>>>>>> 4e7988d (Introducting SobelFilter)
   
 
   

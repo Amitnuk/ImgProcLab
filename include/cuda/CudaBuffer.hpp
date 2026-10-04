@@ -8,7 +8,8 @@
 template <typename T>
 class CudaBuffer{
 public :
-  explicit CudaBuffer(std::size_t iSize = 0)
+  CudaBuffer() = delete;
+  explicit CudaBuffer(std::size_t iSize)
       : m_pData(nullptr)
       , m_iSize(iSize)        
   {

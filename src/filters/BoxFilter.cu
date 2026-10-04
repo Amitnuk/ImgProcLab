@@ -57,7 +57,7 @@ namespace ImgProc {
   void BoxFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
   {
     
-    std::cout << "Kernel Launcher" << std::endl;
+    std::cout << "Box Kernel Launcher" << std::endl;
     dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
     dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
     
@@ -81,7 +81,7 @@ namespace ImgProc {
     CUDA_CALL(cudaEventSynchronize(oStop));
   
     CUDA_CALL(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
-    std::cout << "CUDA kernel: " << fTimeInMS << " ms\n";
+    std::cout << "CUDA kernel: " << fTimeInMS << "s\n";
 
     CUDA_CALL(cudaGetLastError());
     CUDA_CALL(cudaDeviceSynchronize());
