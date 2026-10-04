@@ -28,7 +28,6 @@ add_executable(ImgProcLab
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaUtils.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)
 
-
-
+			  
 target_include_directories(ImgProcLab PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ImgProcLab PRIVATE ${OpenCV_LIBS})
