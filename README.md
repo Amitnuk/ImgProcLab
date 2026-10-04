@@ -10,7 +10,7 @@ As Richard P. Feynman once said, *"What I cannot create, I do not understand."* 
 
 
 # Requirements:
-    * *NVIDIA GPU*
-    * *OpenCV4(to load the images)*
+- NVIDIA GPU*
+- OpenCV4(to load the images)*
 
 
