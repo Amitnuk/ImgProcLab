@@ -42,8 +42,6 @@ Array<T>::Array(std::size_t iHeight, std::size_t iWidth, std::size_t iDepth /*= 
   
 }
 
-
-
 template <typename T>
 T &Array<T>::operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth) {
 
@@ -54,14 +52,9 @@ T &Array<T>::operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth) 
   return m_vData[iDepth*m_iWidth*m_iHeight + iRow*m_iWidth + iCol];
 }
 
-
-
-
-
 template <typename T>
 const T &Array<T>::operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth) const {
 
-  
   if( (iDepth > 1 && m_iDepth == 1) ) {
     iDepth = m_iDepth;
     // PUT A WARNING

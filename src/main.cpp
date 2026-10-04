@@ -12,7 +12,7 @@
 
 void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel  = 3)
 {
-   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
+  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
   ImgProc::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 

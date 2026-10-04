@@ -44,7 +44,6 @@ template <typename T>
 void CudaBuffer<T>::allocate() {
   
   CUDA_CALL(cudaMalloc((void**)&m_pData, m_iSize));
-
 }
 
 template <typename T>
@@ -61,7 +60,6 @@ void CudaBuffer<T>::copyFromDevice(T* pData_h) {
 
   CUDA_CALL(cudaMemcpy(pData_h, m_pData , m_iSize, cudaMemcpyDeviceToHost));
   CUDA_CALL(cudaGetLastError());
-
 }
 
 

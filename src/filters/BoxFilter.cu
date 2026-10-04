@@ -37,7 +37,6 @@ __global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, 
 }
 
 
-
 namespace ImgProc {
 
   template<typename T, typename U>
@@ -92,6 +91,4 @@ namespace ImgProc {
 
 
   template class BoxFilter<uchar, uchar>;
-
-
 }

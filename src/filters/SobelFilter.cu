@@ -53,7 +53,6 @@ __global__ void SobelFilterKernel(const T* pIn, U* pOut, V* pKernelX,  V* pKerne
     pOut[iPixelIndex] = static_cast<U>(fPixelValue);
     
   }
-
 }
 
 namespace ImgProc{
@@ -157,8 +156,7 @@ namespace ImgProc{
     CudaBuffer<int> oCudaBufferKernelY(iKernelSize);
 
 
-    
-
+  
     oCudaBufferIn.copyFromHost(pIn_h);
 
     int* pSobelKernelX = m_aKernelX.data();
@@ -198,6 +196,4 @@ namespace ImgProc{
 
   template class SobelFilter<int, int>;
   template class SobelFilter<uchar, uchar>;
-
-
 }

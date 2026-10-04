@@ -52,18 +52,12 @@ __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHe
 
         int iIndex = (row*iWidth + col)*iChannels;
         pOut[ iIndex + depth ] = static_cast<U>(fPixelValue);
-
     }
-    
-
-
-
 }
 
 
 namespace ImgProc
 {
-    
     
     template <typename T, typename U>
     GaussianFilter<T,U>::GaussianFilter(std::size_t iWidth /*=1*/, std::size_t iHeight/*= 32*/,std::size_t iChannels /*=3*/,int iThreads /*=16*/, std::size_t iKernelSize/*=3*/, float fSigma /*=1.0f*/)
@@ -83,6 +77,7 @@ namespace ImgProc
       m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
       m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
     }
+
     template <typename T, typename U>
     void GaussianFilter<T,U>::createGaussianKernel()
     {   
@@ -165,7 +160,6 @@ namespace ImgProc
         
     }
     
-
     template class GaussianFilter<uchar, uchar>;
     template class GaussianFilter<int, float>;
     template class GaussianFilter<int, int>;
