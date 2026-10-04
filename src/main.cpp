@@ -9,7 +9,7 @@
 #include <vector>
 
 
-void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel )
+void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel  = 3)
 {
    uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
@@ -22,7 +22,7 @@ void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, in
   delete[] pOut;
 }
 
-void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel, float fSigma )
+void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel = 7, float fSigma = 0.5f )
 {
   cv::Mat intImage;
   mImage.convertTo(intImage, CV_32SC3);
