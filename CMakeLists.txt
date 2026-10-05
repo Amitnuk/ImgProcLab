@@ -17,7 +17,6 @@ add_executable(ImgProcLab
 
               ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/BoxFilter.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/BoxFilter.hpp
-
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/GaussianFilter.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/GaussianFilter.hpp
 
@@ -26,8 +25,8 @@ add_executable(ImgProcLab
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/edge/SobelFilter.hpp
 
 
-			  #${CMAKE_CURRENT_SOURCE_DIR}/src/filters/segmentation/BinaryThreshold.cu
-			  #${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/segmentation/BinaryThreshold.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/segmentation/BinaryThreshold.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/segmentation/BinaryThreshold.hpp
 
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaUtils.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)
