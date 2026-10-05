@@ -4,17 +4,18 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <chrono>
-#include "imgproc/filters/BoxFilter.hpp"
-#include "imgproc/filters/GaussianFilter.hpp"
-#include "imgproc/filters/SobelFilter.hpp"
+#include "imgproc/filters/blur/BoxFilter.hpp"
+#include "imgproc/filters/blur/GaussianFilter.hpp"
+#include "imgproc/filters/edge/SobelFilter.hpp"
 #include <vector>
 
+using namespace ImgProc;
 
 void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel  = 3)
 {
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
-  ImgProc::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  Blur::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
   oBoxFilter.KernelLauncher(pIn, pOut);
   cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
@@ -29,7 +30,7 @@ void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannel
   mImage.convertTo(intImage, CV_32SC3);
   
   int* pIn  = intImage.reshape(1,1).ptr<int>(0);
-  ImgProc::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
+  Blur::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
   int* pOut = new int[iWidth*iHeight*iChannels];
   oGaussianFilter.KernelLauncher(pIn, pOut);
   cv::Mat displayImageGaussianFilter;
@@ -62,7 +63,7 @@ void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, i
   cv::imshow("INIT", intImageDisplay);
   */
 
-  ImgProc::SobelFilter<int, int> oSobelFilter(iWidth, iHeight, iThreads, iKernel);
+  ImgProc::Edge::SobelFilter <int, int> oSobelFilter(iWidth, iHeight, iThreads, iKernel);
  
   int* pOut = new int[iWidth*iHeight];
   oSobelFilter.KernelLauncher(pIn, pOut);
