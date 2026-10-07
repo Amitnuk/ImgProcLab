@@ -66,7 +66,11 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
       }
     }
     sort<T>(pWindow, iWindonSize);
-    pOut[(row * iWidth + col) * iChannels + depth] = static_cast<U>(pWindow[iWindonSize/2]);
+    T evenPixel = pWindow[(iWindonSize-1)/2] ;
+    T oddPixel = pWindow[iWindonSize/2];
+    bool bOdd = (iKernel%2 != 0);
+    T tPixelValue = bOdd ? oddPixel : ( evenPixel + oddPixel )/2;
+    pOut[(row * iWidth + col) * iChannels + depth] = static_cast<U>(tPixelValue);
   }  
 }
 

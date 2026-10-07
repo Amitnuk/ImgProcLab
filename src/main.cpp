@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
   BinaryThreshold(mImage, iWidth, iHeight, iThreads, iKernelSize, iThreshold);
   
-  iKernelSize = 3;
+  iKernelSize = 5;
   MedianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
   cv::waitKey(0);  
