@@ -19,6 +19,8 @@ add_executable(ImgProcLab
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/BoxFilter.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/GaussianFilter.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/GaussianFilter.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/MedianFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/MedianFilter.hpp
 
 
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/edge/SobelFilter.cu

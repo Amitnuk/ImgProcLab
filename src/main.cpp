@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include "imgproc/filters/blur/BoxFilter.hpp"
+#include "imgproc/filters/blur/MedianFilter.hpp"
 #include "imgproc/filters/blur/GaussianFilter.hpp"
 #include "imgproc/filters/edge/SobelFilter.hpp"
 #include "imgproc/filters/segmentation/BinaryThreshold.hpp"
@@ -13,6 +14,7 @@
 using namespace ImgProc;
 
 void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel);
+void MedianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel);
 void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel , float fSigma );
 void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, int iKernel);
 void BinaryThreshold(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, int iKernel, int iThreshold);
@@ -46,6 +48,7 @@ int main(int argc, char* argv[]) {
   
   BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
+  
   iKernelSize = 7;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
 
@@ -53,8 +56,10 @@ int main(int argc, char* argv[]) {
   SobelFilter(mImage, iWidth, iHeight, iThreads, iKernelSize);
 
   BinaryThreshold(mImage, iWidth, iHeight, iThreads, iKernelSize, iThreshold);
-
   
+  iKernelSize = 3;
+  MedianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
+
   cv::waitKey(0);  
   return 0;  
 }  
@@ -72,6 +77,19 @@ void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, in
   oBoxFilter.KernelLauncher(pIn, pOut);
   cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
   cv::imshow("Box Filter", mAvgFilter);
+
+  delete[] pOut;
+}
+
+void MedianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel  = 3)
+{
+  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
+
+  Blur::MedianFilter<uchar,uchar> oMedianFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
+  oMedianFilter.KernelLauncher(pIn, pOut);
+  cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
+  cv::imshow("Median Filter", mAvgFilter);
 
   delete[] pOut;
 }

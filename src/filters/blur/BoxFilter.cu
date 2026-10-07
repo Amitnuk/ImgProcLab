@@ -16,12 +16,13 @@ __global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, 
   {
     int iNbPixels = 0;
     int iPixelValue = 0;
-    for(int i = -iKernel; i <= iKernel; ++i)
+    int iHalf = iKernel;
+    for(int i = -iHalf; i <= iHalf; ++i)
     {
-      for(int j = -iKernel; j <= iKernel; ++j)
+      for(int j = -iHalf; j <= iHalf; ++j)
       {
-        int iRow = row + i;
-        int iCol = col + j;
+        int iRow = row + i + iHalf;
+        int iCol = col + j + iHalf;
         
         if( ( iRow >= 0 && iRow < iHeight ) && ( iCol >= 0 && iCol < iWidth ) )
         {
