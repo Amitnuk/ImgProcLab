@@ -31,7 +31,7 @@ __device__ void sort(T* pIn, int N)
 
 
 template <class T, class U >
-__global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
+__global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=3 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
@@ -41,11 +41,11 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
   if( row < iHeight && col < iWidth )
   {
     int iHalf = iKernel/2;
-    int iWindonSize = iKernel*iKernel;
+    int iWindowSize = iKernel*iKernel;
 
     int indice = threadIdx.z*blockDim.y*blockDim.x + threadIdx.y*blockDim.x + threadIdx.x;
 
-    T* pWindow = &windows[indice*iWindonSize];
+    T* pWindow = &windows[indice*iWindowSize];
     for(int i = -iHalf; i <= iHalf; ++i)
     {
       for(int j = -iHalf; j <= iHalf; ++j)
@@ -65,12 +65,8 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
         
       }
     }
-    sort<T>(pWindow, iWindonSize);
-    T evenPixel = pWindow[(iWindonSize-1)/2] ;
-    T oddPixel = pWindow[iWindonSize/2];
-    bool bOdd = (iKernel%2 != 0);
-    T tPixelValue = bOdd ? oddPixel : ( evenPixel + oddPixel )/2;
-    pOut[(row * iWidth + col) * iChannels + depth] = static_cast<U>(tPixelValue);
+    sort<T>(pWindow, iWindowSize);
+    pOut[(row * iWidth + col) * iChannels + depth] = static_cast<U>(pWindow[iWindowSize/2]);
   }  
 }
 
@@ -85,14 +81,26 @@ namespace ImgProc {
     , m_iThreads(iThreads)
     , m_iKernelSize(iKernelSize)
   {
-    m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
-    m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
+    
     std::cout << "Median Filter" << std::endl; 
+
     if(iKernelSize > 7)
     {
       std::cout << "[WARNING] : Max Kernel Size Should be 7" << std::endl;
     }
+
+    if( iKernelSize%2 == 0)
+    {
+      std::cout << "[WARNING] : A KERNEL SIZE SHOULD BE A ODD NUMBER SUP THAN 1, eg 3, 5, 7, 9, ..., 2*n+1" << std::endl;
+    }
+
+    if( m_iKernelSize < 3 || m_iKernelSize > 7|| m_iKernelSize % 2 == 0 )
+    {
+      throw std::invalid_argument("m_iKernelSize must be odd : [3 5 or 7]");
+    }
     
+    m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
+    m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
   }
   
   template<typename T, typename U>

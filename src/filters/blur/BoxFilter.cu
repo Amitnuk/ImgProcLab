@@ -48,9 +48,20 @@ namespace ImgProc {
     , m_iThreads(iThreads)
     , m_iKernelSize(iKernelSize)
   {
+
+    std::cout << "Box Filter" << std::endl; 
+    if( m_iKernelSize%2 == 0)
+    {
+      std::cout << "[WARNING] : A KERNEL SIZE SHOULD BE A ODD NUMBER SUP THAN 1, eg 3, 5, 7, 9, ..., 2*n+1" << std::endl;
+    }
+
+    if( m_iKernelSize < 3 || m_iKernelSize % 2 == 0 )
+    {
+      throw std::invalid_argument("m_iKernelSize must be odd and >= 3");
+    }
+          
     m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
     m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
-    std::cout << "Average Filter" << std::endl; 
   }
   
   template<typename T, typename U>
