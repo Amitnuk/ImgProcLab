@@ -9,7 +9,7 @@ namespace ImgProc {
     class BinaryThreshold : public BaseFilter<T,U>
     {
       public: 
-        explicit BinaryThreshold(std::size_t iWidth = 1, std::size_t iHeight = 32,int iThreads = 16, int iThreshold = 150 );
+        explicit BinaryThreshold(std::size_t iWidth = 1, std::size_t iHeight = 32,int iThreads = 32, int iThreshold = 150 );
         virtual ~BinaryThreshold() = default;
         virtual void KernelLauncher(const T* pIn_h, U* pOut_h ) override;
         virtual void CPULauncher(const T* pIn_h, U* pOut_h )  override {};

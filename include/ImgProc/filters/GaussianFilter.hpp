@@ -11,7 +11,7 @@ namespace ImgProc {
         class GaussianFilter : public BaseFilter<T,U>
         {   
             public :
-                explicit GaussianFilter(std::size_t iWidth = 1, std::size_t iHeight = 32,std::size_t iChannels = 3,int iThreads = 16, std::size_t iKernelSize = 3, float fSigma = 1.0f);
+                explicit GaussianFilter(std::size_t iWidth = 1, std::size_t iHeight = 32,std::size_t iChannels = 3,int iThreads = 32, std::size_t iKernelSize = 3, float fSigma = 1.0f);
                 virtual ~GaussianFilter() = default;
                 virtual void KernelLauncher(const T* pIn_h, U* pOut_h ) override;
                 virtual void CPULauncher(const T* pIn_h, U* pOut_h )  override {}; 

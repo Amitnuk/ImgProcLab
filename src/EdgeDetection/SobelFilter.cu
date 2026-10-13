@@ -90,6 +90,7 @@ namespace ImgProc{
       createSobelKernel();
       m_iGridDimX = (m_iWidth  + m_iThreads - 1)/m_iThreads;
       m_iGridDimY = (m_iHeight + m_iThreads - 1)/m_iThreads;
+      std::cout << "( " << m_iGridDimX << " , " << m_iGridDimY << " , " << m_iThreads << " , " << m_iKernelSize << " )"<< std::endl;
     }
 
 

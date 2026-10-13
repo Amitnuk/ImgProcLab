@@ -6,30 +6,17 @@
 
 using uchar = unsigned char;
 
-template <class T, class U>
-__device__ T maxmax(T a, U b)
-{
-    return (a > b) ? a : b;
-}
-
-template <class T, class U>
-__device__ U minmin(T a, U b)
-{
-    return (a < b) ? a : b;
-}
-
 template <class T, class U , class V>
-__global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHeight, int iWidth, int iChannels =3, std::size_t iKernelSize=3 )
+__global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHeight, int iWidth, int iChannels =3, const std::size_t iKernelSize = 3 )
 {
     int col = threadIdx.x + blockIdx.x * blockDim.x;
     int row = threadIdx.y + blockIdx.y * blockDim.y;
-    int depth = threadIdx.z ;
-
-    if(col < iWidth && row < iHeight && depth < iChannels )
+    
+    if(col < iWidth && row < iHeight )
     {
         V fPixelValue = 0.0f;
         int half = iKernelSize/2;
-        
+        float vBGR[3] = {0.0f, 0.0f, 0.0f}; 
         for( int y = -half; y <= half; ++y )
         {
             for (int x = -half; x <= half; ++x)
@@ -40,9 +27,12 @@ __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHe
                 if(( iCol < iWidth && iCol >= 0 ) && (iRow < iHeight && iRow >= 0))
                 {
                     int iImageIndex  = (iRow*iWidth + iCol)*iChannels;
-                    int iKernelIndex = iKernelSize*iKernelSize*depth + (y+half)*iKernelSize + (x + half);
-                    fPixelValue += pIn[ iImageIndex + depth ]*pKernel[iKernelIndex] ;
-                    
+                    int iKernelIndex = (y+half)*iKernelSize + (x + half);
+
+                    vBGR[0] += static_cast<float>(pIn[ iImageIndex     ]) * static_cast<float>(pKernel[iKernelIndex]) ;
+                    vBGR[1] += static_cast<float>(pIn[ iImageIndex + 1 ]) * static_cast<float>(pKernel[iKernelIndex]) ;
+                    vBGR[2] += static_cast<float>(pIn[ iImageIndex + 2 ]) * static_cast<float>(pKernel[iKernelIndex]) ;
+
                 }
                 
             }
@@ -51,7 +41,10 @@ __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHe
         }
 
         int iIndex = (row*iWidth + col)*iChannels;
-        pOut[ iIndex + depth ] = static_cast<U>(fPixelValue);
+        pOut[ iIndex + 0 ] = static_cast<U>(vBGR[0]);
+        pOut[ iIndex + 1 ] = static_cast<U>(vBGR[1]);
+        pOut[ iIndex + 2 ] = static_cast<U>(vBGR[2]);
+
     }
 }
 
@@ -68,7 +61,7 @@ namespace ImgProc
         , m_iThreads(iThreads)
         , m_iKernelSize(iKernelSize)
         , m_fSigma(fSigma)
-        , m_aKernel(iKernelSize, iKernelSize, iChannels)
+        , m_aKernel(iKernelSize, iKernelSize, 1)
         {
           std::cout << "Gaussian Filter" << std::endl; 
           if( m_iKernelSize%2 == 0)
@@ -84,6 +77,7 @@ namespace ImgProc
           createGaussianKernel();
           m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
           m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
+          std::cout << "( " << m_iGridDimX << " , " << m_iGridDimY << " , " << m_iThreads << " , " << m_iKernelSize << " )"<< std::endl;
         }
     
         template <typename T, typename U>
@@ -98,13 +92,9 @@ namespace ImgProc
                 for (int x = -iHalf; x <= iHalf; ++x)
                 {
     
-                    float fValue = std::exp(-0.5f*(x*x + y*y)/(m_fSigma*m_fSigma));
+                    float fValue = (std::exp(-0.5f*(x*x + y*y)/(m_fSigma*m_fSigma)))*0.0f + 1.0f;
                     
-                    //the same as having 3 1D kernels concatenated, forming a 3D
-                    for (int z = 0; z < m_iChannels; ++z)
-                    {
-                        m_aKernel(y+iHalf, x+iHalf, z) = fValue;
-                    }
+                    m_aKernel(y+iHalf, x+iHalf) = fValue;
                     
                     sum += fValue;
                 }
@@ -113,12 +103,9 @@ namespace ImgProc
             const float invSum = 1.0f / sum;
             for (size_t y = 0; y < m_iKernelSize; ++y)
             {
-                for (size_t x = 0; x < m_iKernelSize; ++x)
+                for( size_t x = 0; x < m_iKernelSize; ++x )
                 {
-                    for(size_t z = 0; z < m_iChannels; ++z)
-                    {
-                        m_aKernel(y, x, z) *= invSum;
-                    }
+                    m_aKernel(y, x) *= invSum;
                 }
             }
             
@@ -130,7 +117,7 @@ namespace ImgProc
             std::cout << "Gaussian Kernel Launcher" << std::endl;
             
             dim3 oGridDim(m_iGridDimX, m_iGridDimY);
-            dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
+            dim3 oBlockDim(m_iThreads, m_iThreads);
     
             std::size_t iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(U);
     

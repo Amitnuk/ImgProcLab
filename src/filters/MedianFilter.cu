@@ -31,11 +31,11 @@ __device__ void sort(T* pIn, int N)
 
 
 template <class T, class U >
-__global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=3 )
+__global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels = 3, int iKernel=3 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
-  int depth = threadIdx.z ;
+ 
   extern __shared__ T windows[];
 
   if( row < iHeight && col < iWidth )
@@ -43,9 +43,11 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
     int iHalf = iKernel/2;
     int iWindowSize = iKernel*iKernel;
 
-    int indice = threadIdx.z*blockDim.y*blockDim.x + threadIdx.y*blockDim.x + threadIdx.x;
-
-    T* pWindow = &windows[indice*iWindowSize];
+    int indice = threadIdx.y*blockDim.x + threadIdx.x;
+    
+    T* pWindowB = &windows[indice*iWindowSize*iChannels];
+    T* pWindowG = pWindowB + iWindowSize ;
+    T* pWindowR = pWindowG + iWindowSize ;
     for(int i = -iHalf; i <= iHalf; ++i)
     {
       for(int j = -iHalf; j <= iHalf; ++j)
@@ -61,12 +63,18 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
         int iWindowIndex = windowRow*iKernel + windowCol;
 
         int iImageIndex = ( r*iWidth + c );
-        pWindow[iWindowIndex] = pIn[iImageIndex*iChannels + depth];
+        pWindowB[iWindowIndex] = pIn[iImageIndex*iChannels + 0];
+        pWindowG[iWindowIndex] = pIn[iImageIndex*iChannels + 1];
+        pWindowR[iWindowIndex] = pIn[iImageIndex*iChannels + 2];
         
       }
     }
-    sort<T>(pWindow, iWindowSize);
-    pOut[(row * iWidth + col) * iChannels + depth] = static_cast<U>(pWindow[iWindowSize/2]);
+    sort<T>(pWindowB, iWindowSize);
+    pOut[(row * iWidth + col) * iChannels + 0] = static_cast<U>(pWindowB[iWindowSize/2]);
+    sort<T>(pWindowG, iWindowSize);
+    pOut[(row * iWidth + col) * iChannels + 1] = static_cast<U>(pWindowG[iWindowSize/2]);
+    sort<T>(pWindowR, iWindowSize);
+    pOut[(row * iWidth + col) * iChannels + 2] = static_cast<U>(pWindowR[iWindowSize/2]);
   }  
 }
 
@@ -99,8 +107,9 @@ namespace ImgProc {
       throw std::invalid_argument("m_iKernelSize must be odd : [3 5 or 7]");
     }
     
-    m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
-    m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
+    m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
+    m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
+    std::cout << "( " << m_iGridDimX << " , " << m_iGridDimY << " , " << m_iThreads << " , " << m_iKernelSize << " )"<< std::endl;
   }
   
   template<typename T, typename U>
@@ -108,8 +117,8 @@ namespace ImgProc {
   {
     
     std::cout << "Median Kernel Launcher" << std::endl;
-    dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
-    dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
+    dim3 oGridDim(m_iGridDimX, m_iGridDimY);
+    dim3 oBlockDim(m_iThreads, m_iThreads);
     
     int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(U);
 
@@ -118,7 +127,7 @@ namespace ImgProc {
 
     oCudaBufferIn.copyFromHost(pIn_h);
 
-    size_t sharedBytes = oBlockDim.x * oBlockDim.y * oBlockDim.z * m_iKernelSize * m_iKernelSize * sizeof(T);
+    size_t sharedBytes = oBlockDim.x * oBlockDim.y * m_iKernelSize * m_iKernelSize * m_iChannels * sizeof(T);
 
     cudaEvent_t oStart, oStop;
     float fTimeInMS;

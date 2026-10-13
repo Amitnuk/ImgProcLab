@@ -42,17 +42,17 @@ int main(int argc, char* argv[]) {
   int iWidth  = mImage.cols;
   int iHeight = mImage.rows;
   int iChannels = 3;
-  int iThreads = 16;
+  int iThreads = 32;
   int iKernelSize = 3;
-  float fSigma = 0.25f;
+  float fSigma = 0.5f;
   int iThreshold = 15;
 
 
-  ColorConversion(mImage, iWidth, iHeight, iChannels, 32);
+  ColorConversion(mImage, iWidth, iHeight, iChannels, iThreads);
   BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
   
-  iKernelSize = 7;
+  iKernelSize = 5;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
 
   iKernelSize = 3;
@@ -60,9 +60,10 @@ int main(int argc, char* argv[]) {
 
   BinaryThreshold(mImage, iWidth, iHeight, iThreads, iKernelSize, iThreshold);
   
-  iKernelSize = 7;
+  iKernelSize = 3;
+  iThreads = 32;
   MedianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
-
+  
   cv::waitKey(0);
   
   return 0;  
@@ -210,7 +211,7 @@ void BinaryThreshold(const cv::Mat& mImage, int iWidth, int iHeight, int iThread
 
   cv::Mat displayCartoon ;
   cv::subtract(mImage, display, displayCartoon);
-  cv::imshow("Binary Threshold Filter 3", displayCartoon);
+  cv::imshow("Cartoonize", displayCartoon);
   delete [] pOut;
 
 }

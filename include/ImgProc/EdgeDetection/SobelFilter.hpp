@@ -10,7 +10,7 @@ namespace ImgProc {
     class SobelFilter : public BaseFilter<T,U>
     {
       public: 
-        explicit SobelFilter(std::size_t iWidth = 1, std::size_t iHeight = 32,int iThreads = 16, std::size_t iKernelSize = 3);
+        explicit SobelFilter(std::size_t iWidth = 1, std::size_t iHeight = 32,int iThreads = 32, std::size_t iKernelSize = 3);
         virtual ~SobelFilter() = default;
         virtual void KernelLauncher(const T* pIn_h, U* pOut_h ) override;
         virtual void CPULauncher(const T* pIn_h, U* pOut_h )  override {};

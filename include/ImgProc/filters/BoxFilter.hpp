@@ -8,7 +8,7 @@ namespace ImgProc{
     class BoxFilter : public BaseFilter<T,U>{
       
     public:
-      explicit BoxFilter( int iWidth = 1, int iHeight = 32,int iChannels = 3,int iThreads = 16,int iKernelSize = 1);
+      explicit BoxFilter( int iWidth = 1, int iHeight = 32,int iChannels = 3,int iThreads = 32,int iKernelSize = 1);
       virtual ~BoxFilter() = default;
       virtual void KernelLauncher(const T* pIn_h, U* pOut_h) override;
       virtual void CPULauncher(const T* pIn_h, U* pOut_h) override {};

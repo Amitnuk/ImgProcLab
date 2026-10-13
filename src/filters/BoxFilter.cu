@@ -6,17 +6,16 @@
 using uchar = unsigned char;
 
 template <class T, class U >
-__global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, int iKernel=1 )
+__global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, int iChannels =3, const std::size_t iKernelSize=3 )
 {
   int col   = threadIdx.x + blockIdx.x * blockDim.x ;
   int row   = threadIdx.y + blockIdx.y * blockDim.y ;
-  int depth = threadIdx.z ;
-
+  
   if( row < iHeight && col < iWidth )
   {
     int iNbPixels = 0;
-    int iPixelValue = 0;
-    int iHalf = iKernel;
+    int vBGR[3] = {0, 0, 0}; 
+    int iHalf = iKernelSize/2;
     for(int i = -iHalf; i <= iHalf; ++i)
     {
       for(int j = -iHalf; j <= iHalf; ++j)
@@ -27,13 +26,17 @@ __global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, 
         if( ( iRow >= 0 && iRow < iHeight ) && ( iCol >= 0 && iCol < iWidth ) )
         {
           int index = ( iRow*iWidth + iCol )*iChannels;
-          iPixelValue += pIn[index + depth];
+          vBGR[0] += pIn[index];
+          vBGR[1] += pIn[index + 1];
+          vBGR[2] += pIn[index + 2];
           ++iNbPixels; 
         }
       }
     }
     int index = (row*iWidth + col)*iChannels;
-    pOut[index + depth] = static_cast<U>(iPixelValue/iNbPixels);
+    pOut[index] = static_cast<U>(vBGR[0]/iNbPixels);
+    pOut[index+1] = static_cast<U>(vBGR[1]/iNbPixels);
+    pOut[index+2] = static_cast<U>(vBGR[2]/iNbPixels);
   }  
 }
 
@@ -60,8 +63,9 @@ namespace ImgProc {
       throw std::invalid_argument("m_iKernelSize must be odd and >= 3");
     }
           
-    m_iGridDimX = (m_iWidth  + iThreads - 1) / iThreads;
-    m_iGridDimY = (m_iHeight + iThreads - 1) / iThreads;
+    m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
+    m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
+    std::cout << "( " << m_iGridDimX << " , " << m_iGridDimY << " , " << m_iThreads << " , " << m_iKernelSize << " )"<< std::endl;
   }
   
   template<typename T, typename U>
@@ -69,8 +73,8 @@ namespace ImgProc {
   {
     
     std::cout << "Box Kernel Launcher" << std::endl;
-    dim3 oGridDim(m_iGridDimX, m_iGridDimY,1);
-    dim3 oBlockDim(m_iThreads, m_iThreads, m_iChannels);
+    dim3 oGridDim(m_iGridDimX, m_iGridDimY);
+    dim3 oBlockDim(m_iThreads, m_iThreads);
     
     int iSize = m_iHeight*m_iWidth*m_iChannels * sizeof(U);
 
