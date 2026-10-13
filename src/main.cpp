@@ -9,10 +9,13 @@
 #include "ImgProc/filters/GaussianFilter.hpp"
 #include "ImgProc/EdgeDetection/SobelFilter.hpp"
 #include "ImgProc/Thresholding/BinaryThreshold.hpp"
+#include "ImgProc/colorConversion/BGR2Gray.hpp"
+
 #include <vector>
 
 using namespace ImgProc;
 
+void ColorConversion(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads);
 void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel);
 void MedianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel);
 void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel , float fSigma );
@@ -45,7 +48,7 @@ int main(int argc, char* argv[]) {
   int iThreshold = 15;
 
 
-  
+  ColorConversion(mImage, iWidth, iHeight, iChannels, 32);
   BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
   
@@ -66,7 +69,19 @@ int main(int argc, char* argv[]) {
 }  
 
 
+void ColorConversion(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads)
+{
+  uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
+  color::BGR2Gray<uchar,uchar> oBGR2Gray(iWidth, iHeight, iChannels, iThreads);
+
+  uchar* pOut = new uchar[iWidth*iHeight]; 
+  oBGR2Gray.KernelLauncher(pIn, pOut);
+  cv::Mat mGray(iHeight, iWidth, CV_8UC1, pOut);
+  cv::imshow("Color Conversion", mGray);
+
+  delete[] pOut;
+}
 
 
 void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel  = 3)
