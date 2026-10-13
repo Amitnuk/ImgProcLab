@@ -1,10 +1,10 @@
 #ifndef BINARY_THRESHOLD_HPP
 #define BINARY_THRESHOLD_HPP
-#include "imgproc/BaseFilter.hpp"
+#include "ImgProc/core/BaseFilter.hpp"
 
 namespace ImgProc {
 
-  namespace Seg{ 
+  namespace Thresh{ 
     template <typename T, typename U>
     class BinaryThreshold : public BaseFilter<T,U>
     {

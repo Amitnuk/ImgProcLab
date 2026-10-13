@@ -1,6 +1,6 @@
 #ifndef SOBEL_FILTER_HPP
 #define SOBEL_FILTER_HPP
-#include "imgproc/BaseFilter.hpp"
+#include "ImgProc/core/BaseFilter.hpp"
 #include "math/Array3D.hpp"
 
 namespace ImgProc {

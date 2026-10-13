@@ -1,11 +1,11 @@
 #ifndef GAUSSIAN_FILTER
 #define GAUSSIAN_FILTER 
-#include "imgproc/BaseFilter.hpp"
+#include "ImgProc/core/BaseFilter.hpp"
 #include "math/Array3D.hpp"
 
 
 namespace ImgProc { 
-    namespace Blur{
+    namespace Filter{
         
         template <typename T, typename U>
         class GaussianFilter : public BaseFilter<T,U>

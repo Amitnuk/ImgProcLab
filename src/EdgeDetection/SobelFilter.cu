@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "imgproc/filters/edge/SobelFilter.hpp"
+#include "ImgProc/EdgeDetection/SobelFilter.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "imgproc/filters/blur/BoxFilter.hpp"
+#include "ImgProc/filters/BoxFilter.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 using uchar = unsigned char;
@@ -41,7 +41,7 @@ __global__ void BoxFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeight, 
 namespace ImgProc {
 
   template<typename T, typename U>
-  Blur::BoxFilter<T,U>::BoxFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
+  Filter::BoxFilter<T,U>::BoxFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
     : m_iWidth(iWidth)
     , m_iHeight(iHeight)
     , m_iChannels(iChannels)
@@ -65,7 +65,7 @@ namespace ImgProc {
   }
   
   template<typename T, typename U>
-  void Blur::BoxFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
+  void Filter::BoxFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
   {
     
     std::cout << "Box Kernel Launcher" << std::endl;
@@ -102,5 +102,5 @@ namespace ImgProc {
   }
 
 
-  template class Blur::BoxFilter<uchar, uchar>;
+  template class Filter::BoxFilter<uchar, uchar>;
 }

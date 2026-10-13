@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "imgproc/filters/blur/MedianFilter.hpp"
+#include "ImgProc/filters/MedianFilter.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 using uchar = unsigned char;
@@ -74,7 +74,7 @@ __global__ void MedianFilterKernel(const T* pIn, U* pOut, int iWidth, int iHeigh
 namespace ImgProc {
 
   template<typename T, typename U>
-  Blur::MedianFilter<T,U>::MedianFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
+  Filter::MedianFilter<T,U>::MedianFilter(int iWidth, int iHeight, int iChannels, int iThreads,int iKernelSize)
     : m_iWidth(iWidth)
     , m_iHeight(iHeight)
     , m_iChannels(iChannels)
@@ -104,7 +104,7 @@ namespace ImgProc {
   }
   
   template<typename T, typename U>
-  void Blur::MedianFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
+  void Filter::MedianFilter<T,U>::KernelLauncher(const T* pIn_h, U* pOut_h)
   {
     
     std::cout << "Median Kernel Launcher" << std::endl;
@@ -143,5 +143,5 @@ namespace ImgProc {
   }
 
 
-  template class Blur::MedianFilter<uchar, uchar>;
+  template class Filter::MedianFilter<uchar, uchar>;
 }

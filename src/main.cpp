@@ -4,11 +4,11 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <chrono>
-#include "imgproc/filters/blur/BoxFilter.hpp"
-#include "imgproc/filters/blur/MedianFilter.hpp"
-#include "imgproc/filters/blur/GaussianFilter.hpp"
-#include "imgproc/filters/edge/SobelFilter.hpp"
-#include "imgproc/filters/segmentation/BinaryThreshold.hpp"
+#include "ImgProc/filters/BoxFilter.hpp"
+#include "ImgProc/filters/MedianFilter.hpp"
+#include "ImgProc/filters/GaussianFilter.hpp"
+#include "ImgProc/EdgeDetection/SobelFilter.hpp"
+#include "ImgProc/Thresholding/BinaryThreshold.hpp"
 #include <vector>
 
 using namespace ImgProc;
@@ -73,7 +73,7 @@ void BoxFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, in
 {
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
-  Blur::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  Filter::BoxFilter<uchar,uchar> oBoxFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
   oBoxFilter.KernelLauncher(pIn, pOut);
   cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
@@ -86,7 +86,7 @@ void MedianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels,
 {
   uchar* pIn  = mImage.reshape(1,1).ptr<uchar>(0);
 
-  Blur::MedianFilter<uchar,uchar> oMedianFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
+  Filter::MedianFilter<uchar,uchar> oMedianFilter(iWidth, iHeight, iChannels, iThreads, iKernel);
   uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
   oMedianFilter.KernelLauncher(pIn, pOut);
   cv::Mat mAvgFilter(iHeight, iWidth, CV_8UC3, pOut);
@@ -101,7 +101,7 @@ void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannel
   mImage.convertTo(intImage, CV_32SC3);
   
   int* pIn  = intImage.reshape(1,1).ptr<int>(0);
-  Blur::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
+  Filter::GaussianFilter<int, int> oGaussianFilter(iWidth, iHeight, iChannels, iThreads, iKernel, iKernel);
   int* pOut = new int[iWidth*iHeight*iChannels];
   oGaussianFilter.KernelLauncher(pIn, pOut);
   cv::Mat displayImageGaussianFilter;
@@ -180,7 +180,7 @@ void BinaryThreshold(const cv::Mat& mImage, int iWidth, int iHeight, int iThread
   
   cv::Mat mSobelFilter(iHeight, iWidth, CV_32SC1, pOut);
   pIn  = mSobelFilter.reshape(1,1).ptr<int>(0);
-  Seg::BinaryThreshold<int, int> BinaryThreshold(iWidth, iHeight, iThreads, iThreshold);
+  Thresh::BinaryThreshold<int, int> BinaryThreshold(iWidth, iHeight, iThreads, iThreshold);
   BinaryThreshold.KernelLauncher(pIn, pOut);
 
   cv::Mat mBinaryThesholdFilter(iHeight, iWidth, CV_32SC1, pOut);

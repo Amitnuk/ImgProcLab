@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <cmath>
-#include "imgproc/filters/blur/GaussianFilter.hpp"
+#include "ImgProc/filters/GaussianFilter.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 using uchar = unsigned char;
@@ -58,7 +58,7 @@ __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHe
 
 namespace ImgProc
 {
-    namespace Blur{
+    namespace Filter{
 
         template <typename T, typename U>
         GaussianFilter<T,U>::GaussianFilter(std::size_t iWidth /*=1*/, std::size_t iHeight/*= 32*/,std::size_t iChannels /*=3*/,int iThreads /*=16*/, std::size_t iKernelSize/*=3*/, float fSigma /*=1.0f*/)

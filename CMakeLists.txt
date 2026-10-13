@@ -13,22 +13,22 @@ find_package(OpenCV REQUIRED)
 add_executable(ImgProcLab
               ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp 
 
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/BaseFilter.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/core/BaseFilter.hpp
 
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/BoxFilter.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/BoxFilter.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/GaussianFilter.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/GaussianFilter.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/blur/MedianFilter.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/blur/MedianFilter.hpp
-
-
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/edge/SobelFilter.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/edge/SobelFilter.hpp
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/BoxFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/BoxFilter.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/GaussianFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/GaussianFilter.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/MedianFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/MedianFilter.hpp
 
 
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/segmentation/BinaryThreshold.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/imgproc/filters/segmentation/BinaryThreshold.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/EdgeDetection/SobelFilter.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/EdgeDetection/SobelFilter.hpp
+
+
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/Thresholding/BinaryThreshold.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/Thresholding/BinaryThreshold.hpp
 
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaUtils.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "imgproc/filters/segmentation/BinaryThreshold.hpp"
+#include "ImgProc/Thresholding/BinaryThreshold.hpp"
 #include "cuda/CudaBuffer.hpp"
 
 
@@ -23,7 +23,7 @@ __global__ void BinaryThresholdKernel(const T* pIn, U* pOut, int iHeight, int iW
 
 namespace ImgProc{
 
-  namespace Seg
+  namespace Thresh
   {
     template <typename T, typename U>
     BinaryThreshold<T, U>::BinaryThreshold(std::size_t iWidth /*= 1*/, std::size_t iHeight /*= 32*/,int iThreads /*= 16*/, int iThreshold /*=150*/)
