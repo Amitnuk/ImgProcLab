@@ -1,6 +1,6 @@
 #pragma once 
 
-#define CUDA_CALL( call )\
+#define CUDA_CHECK( call )\
 {\
   cudaError_t err = call;\
   if( err != cudaSuccess )\

@@ -53,20 +53,20 @@ namespace ImgProc{
       cudaEvent_t oStart, oStop;
       float fTimeInMS;
 
-      CUDA_CALL(cudaEventCreate(&oStart));
-      CUDA_CALL(cudaEventCreate(&oStop));
-      CUDA_CALL(cudaEventRecord(oStart));
+      CUDA_CHECK(cudaEventCreate(&oStart));
+      CUDA_CHECK(cudaEventCreate(&oStop));
+      CUDA_CHECK(cudaEventRecord(oStart));
 
       BinaryThresholdKernel<T, U><<<oGridDim,oBlockDim>>>(oCudaBufferIn.Data(), oCudaBufferOut.Data(), m_iHeight, m_iWidth, m_iThreshold);
 
-      CUDA_CALL(cudaEventRecord(oStop));
-      CUDA_CALL(cudaEventSynchronize(oStop));
+      CUDA_CHECK(cudaEventRecord(oStop));
+      CUDA_CHECK(cudaEventSynchronize(oStop));
     
-      CUDA_CALL(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
+      CUDA_CHECK(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
       std::cout << "CUDA kernel: " << fTimeInMS << "ms\n";
 
-      CUDA_CALL(cudaGetLastError());
-      CUDA_CALL(cudaDeviceSynchronize());
+      CUDA_CHECK(cudaGetLastError());
+      CUDA_CHECK(cudaDeviceSynchronize());
 
     
       oCudaBufferOut.copyFromDevice(pOut_h);

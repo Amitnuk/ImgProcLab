@@ -43,14 +43,14 @@ private:
 template <typename T>
 void CudaBuffer<T>::allocate() {
   
-  CUDA_CALL(cudaMalloc((void**)&m_pData, m_iSize));
+  CUDA_CHECK(cudaMalloc((void**)&m_pData, m_iSize));
 }
 
 template <typename T>
 void CudaBuffer<T>::copyFromHost(const T* pData_h) {
   
-  CUDA_CALL(cudaMemcpy(m_pData, pData_h, m_iSize, cudaMemcpyHostToDevice));
-  CUDA_CALL(cudaGetLastError());
+  CUDA_CHECK(cudaMemcpy(m_pData, pData_h, m_iSize, cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaGetLastError());
 }
 
 
@@ -58,8 +58,8 @@ void CudaBuffer<T>::copyFromHost(const T* pData_h) {
 template <typename T>
 void CudaBuffer<T>::copyFromDevice(T* pData_h) {
 
-  CUDA_CALL(cudaMemcpy(pData_h, m_pData , m_iSize, cudaMemcpyDeviceToHost));
-  CUDA_CALL(cudaGetLastError());
+  CUDA_CHECK(cudaMemcpy(pData_h, m_pData , m_iSize, cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaGetLastError());
 }
 
 

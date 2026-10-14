@@ -155,37 +155,37 @@ namespace ImgProc
             {
                launchKernel();
             }
-            CUDA_CALL(cudaGetLastError());
-            CUDA_CALL(cudaDeviceSynchronize()); 
+            CUDA_CHECK(cudaGetLastError());
+            CUDA_CHECK(cudaDeviceSynchronize()); 
 
             
 #ifdef PROFILE_CUDA 
             launchKernel();
-            CUDA_CALL(cudaGetLastError());
-            CUDA_CALL(cudaDeviceSynchronize());
+            CUDA_CHECK(cudaGetLastError());
+            CUDA_CHECK(cudaDeviceSynchronize());
 #else
             cudaEvent_t oStart, oStop;
             float fTimeInS;
             constexpr int iterations = 100;
 
-            CUDA_CALL(cudaEventCreate(&oStart));
-            CUDA_CALL(cudaEventCreate(&oStop));
-            CUDA_CALL(cudaEventRecord(oStart));
+            CUDA_CHECK(cudaEventCreate(&oStart));
+            CUDA_CHECK(cudaEventCreate(&oStop));
+            CUDA_CHECK(cudaEventRecord(oStart));
 
             for (int i = 0; i < iterations; ++i)
             {
                launchKernel();
             }
         
-            CUDA_CALL(cudaEventRecord(oStop));
-            CUDA_CALL(cudaEventSynchronize(oStop));
-            CUDA_CALL(cudaEventElapsedTime(&fTimeInS, oStart, oStop));
+            CUDA_CHECK(cudaEventRecord(oStop));
+            CUDA_CHECK(cudaEventSynchronize(oStop));
+            CUDA_CHECK(cudaEventElapsedTime(&fTimeInS, oStart, oStop));
             std::cout << "CUDA kernel Naive: " << fTimeInS/iterations << "ms\n";
     
-            CUDA_CALL(cudaGetLastError());
-            CUDA_CALL(cudaDeviceSynchronize());
-            CUDA_CALL(cudaEventDestroy(oStart));
-            CUDA_CALL(cudaEventDestroy(oStop));
+            CUDA_CHECK(cudaGetLastError());
+            CUDA_CHECK(cudaDeviceSynchronize());
+            CUDA_CHECK(cudaEventDestroy(oStart));
+            CUDA_CHECK(cudaEventDestroy(oStop));
 #endif          
             oCudaBufferOut.copyFromDevice(pOut_h);
             
