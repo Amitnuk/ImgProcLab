@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
   //BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
   
-  iKernelSize = 5;
+  iKernelSize = 3;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
 
   //iKernelSize = 3;

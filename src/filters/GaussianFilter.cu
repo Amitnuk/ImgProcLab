@@ -4,7 +4,58 @@
 #include "ImgProc/filters/GaussianFilter.hpp"
 #include "cuda/CudaBuffer.hpp"
 
+#define MAX_KERNEL_SIZE 15
 using uchar = unsigned char;
+
+
+__constant__ float F[MAX_KERNEL_SIZE*MAX_KERNEL_SIZE];
+
+template <class T, class U , class V> 
+__global__ void GaussianFilterKernelV0(const T* pIn, U* pOut, int iHeight, int iWidth, int iChannels =3, const std::size_t iKernelSize = 3 )
+{
+    int iCol = threadIdx.x + blockDim.x*blockIdx.x;
+    int iRow = threadIdx.y + blockDim.y*blockIdx.y; 
+
+
+
+    if(iCol < iWidth && iRow < iHeight )
+    {
+        float vBGR[] = {0.0f,0.0f,0.0f};
+        int iRadius = iKernelSize/2; 
+
+        for(size_t kRow = 0; kRow < 2*iRadius+1; kRow++)
+        {
+            for (size_t kCol = 0; kCol < 2*iRadius+1; kCol++)
+            {
+                int iInRow = iRow - iRadius + kRow ;
+                int iInCol = iCol - iRadius + kCol ;
+
+                if((iInRow >= 0 && iInRow < iHeight ) && (iInCol >= 0 && iInCol < iWidth ))
+                {
+                    int iIndex = (iInRow*iWidth + iInCol)*iChannels;
+                    const float& fWeight = F[kRow*iKernelSize + kCol];
+
+                    vBGR[0] += static_cast<float>(pIn[iIndex + 0]) * fWeight;
+                    vBGR[1] += static_cast<float>(pIn[iIndex + 1]) * fWeight;
+                    vBGR[2] += static_cast<float>(pIn[iIndex + 2]) * fWeight;   
+                }
+                
+               
+            }
+            
+        }
+        
+
+        int iIndex = (iRow*iWidth + iCol)*iChannels;
+        pOut[iIndex + 0] = static_cast<U>(vBGR[0]);
+        pOut[iIndex + 1] = static_cast<U>(vBGR[1]);
+        pOut[iIndex + 2] = static_cast<U>(vBGR[2]);
+
+    }
+    
+}
+
+
 
 template <class T, class U , class V>
 __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHeight, int iWidth, int iChannels =3, const std::size_t iKernelSize = 3 )
@@ -127,20 +178,24 @@ namespace ImgProc
     
             CudaBuffer<T> oCudaBufferIn(iSize);
             CudaBuffer<U> oCudaBufferOut(iSize);
-            CudaBuffer<float> oCudaBufferKernel(m_iKernelSize*m_iKernelSize*m_iChannels*sizeof(float));
+            //CudaBuffer<float> oCudaBufferKernel(m_iKernelSize*m_iKernelSize*m_iChannels*sizeof(float));
            
             oCudaBufferIn.copyFromHost(pIn_h);
     
-            float* pFloat = m_aKernel.data();
-            oCudaBufferKernel.copyFromHost(pFloat);
+            //float* pFloat = m_aKernel.data();
+            //oCudaBufferKernel.copyFromHost(pFloat);
             
+            const size_t kernelSize =
+            static_cast<size_t>(m_iKernelSize) * m_iKernelSize;
+
+            CUDA_CHECK(cudaMemcpyToSymbol(F,m_aKernel.data(),kernelSize * sizeof(float)));
             auto launchKernel = [&]()
             {
-                GaussianFilterKernel<T, U, float>
+                GaussianFilterKernelV0<T, U, float>
                     <<<oGridDim, oBlockDim>>>(
                         oCudaBufferIn.Data(),
                         oCudaBufferOut.Data(),
-                        oCudaBufferKernel.Data(),
+                        //oCudaBufferKernel.Data(),
                         m_iHeight,
                         m_iWidth,
                         m_iChannels,
