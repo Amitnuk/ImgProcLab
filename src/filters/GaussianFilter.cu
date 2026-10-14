@@ -14,7 +14,6 @@ __global__ void GaussianFilterKernel(const T* pIn, U* pOut, V* pKernel,  int iHe
     
     if(col < iWidth && row < iHeight )
     {
-        V fPixelValue = 0.0f;
         int half = iKernelSize/2;
         float vBGR[3] = {0.0f, 0.0f, 0.0f}; 
         for( int y = -half; y <= half; ++y )
@@ -74,6 +73,11 @@ namespace ImgProc
             throw std::invalid_argument("m_iKernelSize must be odd and >= 3");
           }
 
+          if( m_fSigma <= 0.0f )
+          {
+            throw std::invalid_argument("Gaussian sigma must be positive");
+          }
+
           createGaussianKernel();
           m_iGridDimX = (m_iWidth  + m_iThreads - 1) / m_iThreads;
           m_iGridDimY = (m_iHeight + m_iThreads - 1) / m_iThreads;
@@ -92,7 +96,7 @@ namespace ImgProc
                 for (int x = -iHalf; x <= iHalf; ++x)
                 {
     
-                    float fValue = (std::exp(-0.5f*(x*x + y*y)/(m_fSigma*m_fSigma)))*0.0f + 1.0f;
+                    float fValue = (std::exp(-0.5f*(x*x + y*y)/(m_fSigma*m_fSigma)));
                     
                     m_aKernel(y+iHalf, x+iHalf) = fValue;
                     
@@ -130,28 +134,60 @@ namespace ImgProc
             float* pFloat = m_aKernel.data();
             oCudaBufferKernel.copyFromHost(pFloat);
             
+            auto launchKernel = [&]()
+            {
+                GaussianFilterKernel<T, U, float>
+                    <<<oGridDim, oBlockDim>>>(
+                        oCudaBufferIn.Data(),
+                        oCudaBufferOut.Data(),
+                        oCudaBufferKernel.Data(),
+                        m_iHeight,
+                        m_iWidth,
+                        m_iChannels,
+                        m_iKernelSize
+                    );
+            };
             
-             
+            constexpr int warmup = 10;
+           
+            // Warm-up
+            for (int i = 0; i < warmup; ++i)
+            {
+               launchKernel();
+            }
+            CUDA_CALL(cudaGetLastError());
+            CUDA_CALL(cudaDeviceSynchronize()); 
+
+            
+#ifdef PROFILE_CUDA 
+            launchKernel();
+            CUDA_CALL(cudaGetLastError());
+            CUDA_CALL(cudaDeviceSynchronize());
+#else
             cudaEvent_t oStart, oStop;
             float fTimeInS;
-    
+            constexpr int iterations = 100;
+
             CUDA_CALL(cudaEventCreate(&oStart));
             CUDA_CALL(cudaEventCreate(&oStop));
             CUDA_CALL(cudaEventRecord(oStart));
-            
-            GaussianFilterKernel<T, U, float><<<oGridDim,oBlockDim>>>(oCudaBufferIn.Data(), oCudaBufferOut.Data(), oCudaBufferKernel.Data(), m_iHeight, m_iWidth, m_iChannels, m_iKernelSize );
-            
+
+            for (int i = 0; i < iterations; ++i)
+            {
+               launchKernel();
+            }
+        
             CUDA_CALL(cudaEventRecord(oStop));
             CUDA_CALL(cudaEventSynchronize(oStop));
-      
             CUDA_CALL(cudaEventElapsedTime(&fTimeInS, oStart, oStop));
-            std::cout << "CUDA kernel: " << fTimeInS << "ms\n";
+            std::cout << "CUDA kernel Naive: " << fTimeInS/iterations << "ms\n";
     
             CUDA_CALL(cudaGetLastError());
             CUDA_CALL(cudaDeviceSynchronize());
-            
+            CUDA_CALL(cudaEventDestroy(oStart));
+            CUDA_CALL(cudaEventDestroy(oStop));
+#endif          
             oCudaBufferOut.copyFromDevice(pOut_h);
-            
             
         }
         

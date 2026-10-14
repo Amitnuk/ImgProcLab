@@ -1,7 +1,10 @@
-#include <opencv2/core/hal/interface.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/cuda.hpp>
+#include <opencv2/cudafilters.hpp> 
+#include <opencv2/core/cuda_stream_accessor.hpp>
+#include <cuda_runtime.h>
 #include <iostream>
 #include <chrono>
 #include "ImgProc/filters/BoxFilter.hpp"
@@ -21,6 +24,105 @@ void MedianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels,
 void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannels, int iThreads, int iKernel , float fSigma );
 void SobelFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, int iKernel);
 void BinaryThreshold(const cv::Mat& mImage, int iWidth, int iHeight, int iThreads, int iKernel, int iThreshold);
+
+
+void GaussianFilter(cv::Mat oImage, int ikernelSize = 3, double fSigma = 0.1)
+{
+    
+    cv::cuda::GpuMat d_input, d_output;
+    d_input.upload(oImage);
+
+   
+
+    auto gaussian = cv::cuda::createGaussianFilter(oImage.type(), oImage.type(),cv::Size(ikernelSize, ikernelSize), fSigma);
+
+    cv::cuda::Stream stream;
+
+    // Warm-up: avoid including initialization overhead.
+    for (int i = 0; i < 1; ++i)
+        gaussian->apply(d_input, d_output, stream);
+
+    stream.waitForCompletion();
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Use the same CUDA stream as OpenCV.
+    cudaStream_t cudaStream =
+        cv::cuda::StreamAccessor::getStream(stream);
+
+    cudaEventRecord(start, cudaStream);
+
+    constexpr int iterations = 1;
+
+    for (int i = 0; i < iterations; ++i)
+        gaussian->apply(d_input, d_output, stream);
+
+    cudaEventRecord(stop, cudaStream);
+    cudaEventSynchronize(stop);
+
+    float elapsedMs = 0.0f;
+    cudaEventElapsedTime(&elapsedMs, start, stop);
+
+    std::cout << "OpenCV CUDA Gaussian filter: " << elapsedMs / iterations << " ms per iteration\n";
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+}
+
+
+void GaussianFilterCPU(cv::Mat oImage, int ikernelSize = 3, double fSigma = 0.1)
+{
+    
+    cv::Mat output;
+
+    const int kernelSize = 5;
+    const double sigma = 1.0;
+
+    // Warm-up
+    for (int i = 0; i < 10; ++i)
+    {
+        cv::GaussianBlur(
+            oImage,
+            output,
+            cv::Size(kernelSize, kernelSize),
+            sigma,
+            sigma,
+            cv::BORDER_CONSTANT
+        );
+    }
+
+    constexpr int iterations = 100;
+
+    auto start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < iterations; ++i)
+    {
+        cv::GaussianBlur(
+            oImage,
+            output,
+            cv::Size(kernelSize, kernelSize),
+            sigma,
+            sigma,
+            cv::BORDER_CONSTANT
+        );
+    }
+
+    auto stop = std::chrono::steady_clock::now();
+
+    double elapsedMs =
+        std::chrono::duration<double, std::milli>(
+            stop - start
+        ).count();
+
+    std::cout << "OpenCV CPU Gaussian filter: "
+              << elapsedMs / iterations
+              << " ms per iteration\n";
+
+    
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -44,25 +146,25 @@ int main(int argc, char* argv[]) {
   int iChannels = 3;
   int iThreads = 32;
   int iKernelSize = 3;
-  float fSigma = 0.5f;
+  float fSigma = 1.5f;
   int iThreshold = 15;
 
 
-  ColorConversion(mImage, iWidth, iHeight, iChannels, iThreads);
-  BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
+  //ColorConversion(mImage, iWidth, iHeight, iChannels, iThreads);
+  //BoxFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
 
   
   iKernelSize = 5;
   GaussianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize, fSigma);
 
-  iKernelSize = 3;
-  SobelFilter(mImage, iWidth, iHeight, iThreads, iKernelSize);
+  //iKernelSize = 3;
+  //SobelFilter(mImage, iWidth, iHeight, iThreads, iKernelSize);
 
-  BinaryThreshold(mImage, iWidth, iHeight, iThreads, iKernelSize, iThreshold);
+  //BinaryThreshold(mImage, iWidth, iHeight, iThreads, iKernelSize, iThreshold);
   
-  iKernelSize = 3;
-  iThreads = 32;
-  MedianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
+  //iKernelSize = 3;
+  //iThreads = 32;
+  //MedianFilter(mImage, iWidth, iHeight, iChannels, iThreads, iKernelSize );
   
   cv::waitKey(0);
   
@@ -126,6 +228,9 @@ void GaussianFilter(const cv::Mat& mImage, int iWidth, int iHeight, int iChannel
   cv::imshow("Gaussian Filter", displayImageGaussianFilter);
 
   delete [] pOut;
+
+  GaussianFilter(mImage, iKernel);
+  GaussianFilterCPU(mImage, iKernel);
 
 }
 
