@@ -6,7 +6,7 @@ project(ImgProcLab LANGUAGES CUDA CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CUDA_ARCHITECTURES native)
 
 find_package(OpenCV REQUIRED)
@@ -39,7 +39,7 @@ add_library(ImgProcLab STATIC
 target_include_directories(ImgProcLab PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ImgProcLab PRIVATE ${OpenCV_LIBS} CUDA::cudart)
 
-#target_compile_options(ImgProcLab PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g;-G>)
+target_compile_options(ImgProcLab PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g;-G>)
 
 set(TARGET_APPLICATION app/ImgProcLabDemo)
 
