@@ -2,6 +2,8 @@
 #include <memory>
 #include "ArgumentParser.hpp"
 
+
+
 int main(int argc, char* argv[]) 
 {
     std::unique_ptr<Parser> pParser = std::make_unique<Parser>();
@@ -17,11 +19,13 @@ int main(int argc, char* argv[])
         pParser->printUsage(argv[0]);
         return 0;
     }
+
     
     try
     {
         const AlgorithmConfig& oConfig = pParser->parseArguments(argc, argv);
         pParser->executeFilter(oConfig);
+	pParser->validateConfig(oConfig);        
         return 0;
     }
     catch(const std::exception& e)

@@ -6,12 +6,15 @@
 // ============================================================
 
 enum class Algorithm
-{   
+{
     BoxFilter,
-    Histogram,
     GaussianFilter,
+    Grayscale,
+    Histogram,    
     MedianFilter,
+    Resize,    
     SobelFilter,
+       
 };
 
 
@@ -32,9 +35,13 @@ enum class Version
 
 struct AlgorithmConfig
 {
+    std::optional<int> m_iHeight;
+    std::optional<int> m_iWidth;    
+    std::optional<int> m_iKernelSize;
+    std::optional<float> m_fSigma;
+    std::string_view m_sImagePath;
     Algorithm m_oAlgorithmType;
-    Version   m_oVersion;
-    int m_iKernelSize;
+    Version   m_oVersion; 
 };
 
 
@@ -46,6 +53,7 @@ class Parser
         std::optional<Algorithm> parseAlgorithm(std::string_view sFilterName);
         std::optional<Version> parseVersion(std::string_view sVersion);
         std::optional<int> parseInteger(std::string_view sInteger);
+        std::optional<float> parseFloat(std::string_view sInteger);
         bool isCompatible(Algorithm oAlgorithmType, Version oVersion);
         void validateConfig(const AlgorithmConfig& oConfig);
         void executeFilter(const AlgorithmConfig& oConfig);
