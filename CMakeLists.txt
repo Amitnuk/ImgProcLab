@@ -12,9 +12,8 @@ set(CMAKE_CUDA_ARCHITECTURES native)
 find_package(OpenCV REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
-add_executable(ImgProcLab
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp 
-
+add_library(ImgProcLab STATIC
+           
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/core/BaseFilter.hpp
 
               ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/BoxFilter.cu
@@ -37,12 +36,14 @@ add_executable(ImgProcLab
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/CudaBuffer.hpp)
 
 			  
-target_include_directories(ImgProcLab PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(ImgProcLab PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ImgProcLab PRIVATE ${OpenCV_LIBS} CUDA::cudart)
 
 #target_compile_options(ImgProcLab PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g;-G>)
 
+set(TARGET_APPLICATION app/ImgProcLabDemo)
 
+add_subdirectory(${TARGET_APPLICATION})
 
 option(PROFILE_CUDA "Enable CUDA profilling mode" OFF)
 
