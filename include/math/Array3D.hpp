@@ -11,9 +11,6 @@ public:
   explicit Array(std::size_t iHeight, std::size_t iWidth, std::size_t iDepth = 1);
   T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0);
   const T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0) const;
-
-  T* begin() const {return m_vData.begin();};
-  T* end() const {return m_vData.end();};
   
   inline T* data() {return m_vData.data();}
   inline const T* data() const {return m_vData.data();}
