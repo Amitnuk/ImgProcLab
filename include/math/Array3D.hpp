@@ -8,6 +8,7 @@ template <typename T>
 class Array {
 
 public:
+  // TODO: move and copy contructors 
   explicit Array(std::size_t iHeight, std::size_t iWidth, std::size_t iDepth = 1);
   T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0);
   const T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0) const;
