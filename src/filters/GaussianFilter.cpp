@@ -22,7 +22,6 @@ namespace ImgProcLab
         //, m_iChannels(3)
         , m_oVersion(m_oVersion)
         , m_fSigma(fSigma)
-        , m_aKernel(iKernelSize, iKernelSize, 1)
         {
 
             m_oInputImage = cv::imread(std::string(sImgPath));
@@ -49,7 +48,7 @@ namespace ImgProcLab
             
             
             std::cout << "Gaussian Filter" << std::endl; 
-            createGaussianKernel();
+          
 
             cv::imshow("Original", m_oInputImage);
             switch(m_oVersion)
@@ -75,36 +74,8 @@ namespace ImgProcLab
                 default:
                     break;
             }
+            cv::imshow("GaussianFilter", m_oOutputImage);
             cv::waitKey(0);
-        }
-    
-        void GaussianFilter::createGaussianKernel()
-        {   
-    
-            int iHalf = m_iKernelSize/2;
-            float sum = 0.0f;
-            for (int y = -iHalf; y <= iHalf; ++y)
-            {
-                for (int x = -iHalf; x <= iHalf; ++x)
-                {
-    
-                    float fValue = (std::exp(-0.5f*(x*x + y*y)/(m_fSigma*m_fSigma)));
-                    
-                    m_aKernel(y+iHalf, x+iHalf) = fValue;
-                    
-                    sum += fValue;
-                }
-            }
-    
-            const float invSum = 1.0f / sum;
-            for (size_t y = 0; y < m_iKernelSize; ++y)
-            {
-                for( size_t x = 0; x < m_iKernelSize; ++x )
-                {
-                    m_aKernel(y, x) *= invSum;
-                }
-            }
-            
         }
     }
 

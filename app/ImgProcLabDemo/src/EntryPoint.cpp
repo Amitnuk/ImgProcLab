@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     try
     {
         const AlgorithmConfig& oConfig = oParser.parseArguments(argc, argv);
-        oParser.executeFilter(oConfig);
+        oParser.executeAlgorithm(oConfig);
 	    
         return 0;
     }

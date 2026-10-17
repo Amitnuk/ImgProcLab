@@ -18,7 +18,7 @@
 std::optional<Algorithm> Parser::parseAlgorithm(std::string_view sFilterName)
 {
     if( sFilterName == "box") return Algorithm::BoxFilter;
-    if(sFilterName == "gaussian") return Algorithm::GaussianFilter;
+    if( sFilterName == "gaussian") return Algorithm::GaussianFilter;
     if( sFilterName == "gray") return Algorithm::Grayscale;
     if( sFilterName == "histogram") return Algorithm::Histogram;    
     if( sFilterName == "median") return Algorithm::MedianFilter;
@@ -354,7 +354,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 // ============================================================
 
 
-void Parser::executeFilter(const AlgorithmConfig& oConfig)
+void Parser::executeAlgorithm(const AlgorithmConfig& oConfig)
 {
     auto displayInfo = [](const AlgorithmConfig& oConfig) 
     {

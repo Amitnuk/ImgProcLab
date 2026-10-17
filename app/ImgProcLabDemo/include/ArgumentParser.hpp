@@ -56,7 +56,7 @@ class Parser
         std::optional<float> parseFloat(std::string_view sInteger);
         bool isCompatible(Algorithm oAlgorithmType, Version oVersion);
         void validateConfig(const AlgorithmConfig& oConfig);
-        void executeFilter(const AlgorithmConfig& oConfig);
+        void executeAlgorithm(const AlgorithmConfig& oConfig);
         void printUsage(const char* executable);
 
         const AlgorithmConfig& parseArguments(int argc, char* argv[]);
