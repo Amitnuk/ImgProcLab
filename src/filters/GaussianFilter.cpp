@@ -46,10 +46,12 @@ namespace ImgProcLab
             {
                 throw std::invalid_argument("Gaussian sigma must be positive");
             }
-            cv::imshow("Original", m_oInputImage);
+            
             
             std::cout << "Gaussian Filter" << std::endl; 
             createGaussianKernel();
+
+            cv::imshow("Original", m_oInputImage);
             switch(m_oVersion)
             {
                 case GaussianVersion::V1:

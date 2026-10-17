@@ -116,81 +116,92 @@ bool Parser::isCompatible(Algorithm oAlgorithmType, Version oVersion)
 // ============================================================
 void Parser::validateConfig(const AlgorithmConfig& oConfig)
 {
-    if(oConfig.m_sImagePath.empty())
+    if( !oConfig.m_sImagePath || (*oConfig.m_sImagePath).empty() )
     {
       throw std::invalid_argument("Missing required argument: --image");
     }
+
+    if(!oConfig.m_oAlgorithmType)
+    {
+       throw std::invalid_argument("Missing required argument: --algo");
+    }
+
+    if(!oConfig.m_oVersion)
+    {
+       throw std::invalid_argument("Missing required argument: --version");
+    }
     
-    if(!isCompatible(oConfig.m_oAlgorithmType, oConfig.m_oVersion))
+    
+    if(!isCompatible(*oConfig.m_oAlgorithmType, *oConfig.m_oVersion))
     {
        throw std::invalid_argument("Selected version is not supported by the selected algorithm.");
     }
 
-    switch(oConfig.m_oAlgorithmType)
+    switch(*oConfig.m_oAlgorithmType)
     {
        case Algorithm::GaussianFilter:
-	 if(!oConfig.m_iKernelSize)
-	 {
-	   throw std::invalid_argument("Selected algorithim requires --kernel-size");
-	 }
+        if(!oConfig.m_iKernelSize)
+        {
+        throw std::invalid_argument("Selected algorithim requires --kernel-size");
+        }
 
-	 if(*oConfig.m_iKernelSize <= 0 || *oConfig.m_iKernelSize%2 == 0)
-	 {
-	   throw std::invalid_argument("Kernel size must be a positive odd integer");
-	 }
-	 
-	 if( (oConfig.m_fSigma) && ( *oConfig.m_fSigma <= 0.0f || *oConfig.m_fSigma == std::numeric_limits<float>::infinity()) )
-         {
-	   throw std::invalid_argument("Gaussian sigma must be finite and positive");
-         }
+        if(*oConfig.m_iKernelSize <= 0 || *oConfig.m_iKernelSize%2 == 0)
+        {
+            throw std::invalid_argument("Kernel size must be a positive odd integer");
+        }
+        
+        if( !oConfig.m_fSigma ||  ( !std::isfinite(*oConfig.m_fSigma) || *oConfig.m_fSigma <= 0.0f ) )
+        {
+            throw std::invalid_argument("Gaussian sigma must be finite and positive");
+        }
 
-         if(*oConfig.m_iHeight || *oConfig.m_iWidth)
-         {
-	   throw std::invalid_argument("Gaussian algorithm does not requires --width or --height");
-	 }
-	 break;
+        if(oConfig.m_iHeight || oConfig.m_iWidth)
+        {
+        throw std::invalid_argument("Gaussian algorithm does not requires --width or --height");
+        }
+        break;
        case Algorithm::MedianFilter:
        case Algorithm::SobelFilter:
        case Algorithm::BoxFilter:         
-         if(!oConfig.m_iKernelSize)
-         {
-	   throw std::invalid_argument("Selected algothim requires --kernel-size");
-	 }
+        if(!oConfig.m_iKernelSize)
+        {
+            throw std::invalid_argument("Selected algothim requires --kernel-size");
+        }
 
-	 if(*oConfig.m_iKernelSize <= 0 || *oConfig.m_iKernelSize%2 == 0)
-	 {
-	   throw std::invalid_argument("Kernel size must be a positive odd integer");
-         }
-	 if( oConfig.m_fSigma || oConfig.m_iHeight || oConfig.m_iWidth)
-	 {
-	   throw std::invalid_argument("Unsupported parameters for Gaussian filter");
-         }
-         break;
+        if(*oConfig.m_iKernelSize <= 0 || *oConfig.m_iKernelSize%2 == 0)
+        {
+            throw std::invalid_argument("Kernel size must be a positive odd integer");
+        }
+        if( oConfig.m_fSigma || oConfig.m_iHeight || oConfig.m_iWidth)
+        {
+            throw std::invalid_argument("Unsupported parameters for Gaussian filter");
+        }
+        break;
        case Algorithm::Histogram:
        case Algorithm::Grayscale:
-         if(oConfig.m_iKernelSize || oConfig.m_fSigma || oConfig.m_iHeight || oConfig.m_iWidth)
-         {
-           throw std::invalid_argument(
-               "Selected algorithm does not requires"
-	       "--kernel-size, --sigma or --width or --height");
-         }
-         break;
+        if(oConfig.m_iKernelSize || oConfig.m_fSigma || oConfig.m_iHeight || oConfig.m_iWidth)
+        {
+        throw std::invalid_argument(
+            "Selected algorithm does not requires"
+        "--kernel-size, --sigma or --width or --height");
+        }
+        break;
        case Algorithm::Resize:
-         if(!oConfig.m_iHeight || !oConfig.m_iWidth)
-         {
-	   throw std::invalid_argument("Resize requires --width and --height");
-         }
+        if(!oConfig.m_iHeight || !oConfig.m_iWidth)
+        {
+	        throw std::invalid_argument("Resize requires --width and --height");
+        }
          
-         if(*oConfig.m_iHeight<=0 || *oConfig.m_iWidth <= 0)
-         {
-	   throw std::invalid_argument("Resize dimensions must be positive");
-         }
+        if(*oConfig.m_iHeight<=0 || *oConfig.m_iWidth <= 0)
+        {
+	        throw std::invalid_argument("Resize dimensions must be positive");
+        }
 
-	 if(oConfig.m_fSigma || oConfig.m_iKernelSize)
-         {
-	   throw std::invalid_argument("Resize does not requires sigma or sigma");
-         }
-	 break;
+	    if(oConfig.m_fSigma || oConfig.m_iKernelSize)
+        {
+	        throw std::invalid_argument("Resize does not requires sigma or sigma");
+        }
+	    break;
     }    
 }
 
@@ -216,10 +227,10 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
         auto nextValue = [&]() -> std::string_view
         {
             if(i + 1 >= argc)
-	    {
-	      throw std::invalid_argument("Missing value for: "+std::string(sArgument));
+	        {
+	            throw std::invalid_argument("Missing value for: "+std::string(sArgument));
             }
-	    return argv[++i];
+	        return argv[++i];
         };
 
         if( sArgument == "--image")
@@ -273,8 +284,8 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
         {
             if(oHeight)
             {
-	      throw std::invalid_argument("Duplicate argument : --height");
-	    }            
+	            throw std::invalid_argument("Duplicate argument : --height");
+	        }            
 
 	    oHeight = parseInteger(nextValue());
         }
@@ -296,26 +307,30 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     if(!oAlgorithm)
     {
         throw std::invalid_argument("Missing required argument: --algo");
+       
+    }
+    else if(oAlgorithm)
+    {
         switch( *oAlgorithm )
-	{
-	  case Algorithm::BoxFilter:
-          case Algorithm::GaussianFilter:
-          case Algorithm::MedianFilter:
-          case Algorithm::SobelFilter:
-	    if(!oKernelSize)
 	    {
-	      throw std::invalid_argument("Selected algoritm requires argument: --kernel-size");
-            }
-            break;
-          case Algorithm::Histogram:
-	  case Algorithm::Grayscale:            
-          case Algorithm::Resize:            
-	    if(oKernelSize)
-	    {
-	      throw std::invalid_argument("Selected algoritm does not requires argument: --kernel-size");
-            }
-	    break;
-	}
+            case Algorithm::BoxFilter:
+            case Algorithm::GaussianFilter:
+            case Algorithm::MedianFilter:
+            case Algorithm::SobelFilter:
+                if(!oKernelSize)
+                {
+                    throw std::invalid_argument("Selected algoritm requires argument: --kernel-size");
+                }
+                break;
+            case Algorithm::Histogram:
+            case Algorithm::Grayscale:            
+            case Algorithm::Resize:            
+                if(oKernelSize)
+                {
+                 throw std::invalid_argument("Selected algoritm does not requires argument: --kernel-size");
+                }
+	            break;
+	    }
     }
 
     if(!oVersion)
@@ -325,7 +340,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 
     
     
-    m_oConfig = AlgorithmConfig{*oHeight, *oWidth, *oKernelSize, *oSigma, *oImagePath, *oAlgorithm, *oVersion};
+    m_oConfig = AlgorithmConfig{oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
     
     return m_oConfig;
 }
@@ -343,36 +358,37 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
 {
     auto displayInfo = [](const AlgorithmConfig& oConfig) 
     {
-        if(*oConfig.m_iKernelSize)
+        if(oConfig.m_iKernelSize)
         {
         std::cout << "Kernel size: " << *oConfig.m_iKernelSize << std::endl;
         }
 
-        if(*oConfig.m_iHeight)
+        if(oConfig.m_iHeight)
         {
         std::cout << "Height: " << *oConfig.m_iHeight << std::endl;
         }
 
-        if(*oConfig.m_iWidth)
+        if(oConfig.m_iWidth)
         {
         std::cout << "Width: " << *oConfig.m_iWidth << std::endl;
         }
 
-        if(*oConfig.m_fSigma > 0.0f)
+        if(oConfig.m_fSigma)
         {
         std::cout << "Sigma: " << *oConfig.m_fSigma << std::endl;
         }
-        if(!oConfig.m_sImagePath.empty())
+        if(!(*oConfig.m_sImagePath).empty())
         {
-            std::cout << "ImagePath: " << oConfig.m_sImagePath << std::endl;
+            std::cout << "ImagePath: " << *oConfig.m_sImagePath << std::endl;
         }
         
     };
 
-    switch(oConfig.m_oAlgorithmType)
+    validateConfig(oConfig);        
+    switch(*oConfig.m_oAlgorithmType)
     {
         case Algorithm::BoxFilter:
-            switch(oConfig.m_oVersion)
+            switch(*oConfig.m_oVersion)
             {
             case Version::V1:
                 std::cout << "Executing BoxFilter V1" << std::endl;
@@ -393,13 +409,13 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
             break;
         
         case Algorithm::GaussianFilter:
-            switch(oConfig.m_oVersion)
+            switch(*oConfig.m_oVersion)
             {
             case Version::V1:
                 std::cout << "Executing GaussianFilter V1" << std::endl;
                 displayInfo(oConfig);
                 
-                ImgProcLab::Filter::GaussianFilter( oConfig.m_sImagePath, *oConfig.m_iKernelSize, *oConfig.m_fSigma, ImgProcLab::GaussianVersion::V1);
+                ImgProcLab::Filter::GaussianFilter( *oConfig.m_sImagePath, *oConfig.m_iKernelSize, *oConfig.m_fSigma, ImgProcLab::GaussianVersion::V1);
                 break;
 
             case Version::V2:
@@ -426,7 +442,7 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
             break;
 
         case Algorithm::Histogram :
-            switch(oConfig.m_oVersion)
+            switch(*oConfig.m_oVersion)
             {
             case Version::V1:
                 std::cout << "Executing Histogram V1" << std::endl;
@@ -447,7 +463,7 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
             break;
 
         case Algorithm::MedianFilter :
-            switch(oConfig.m_oVersion)
+            switch(*oConfig.m_oVersion)
             {
             case Version::V1:
                 std::cout << "Executing MedianFilter V1" << std::endl;
@@ -465,9 +481,9 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
                 std::cout << "[ERROR]: Executing MedianFilter with Unknown Version" << std::endl;
                 break;
             }
-
+            break;
         case Algorithm::SobelFilter :
-            switch(oConfig.m_oVersion)
+            switch(*oConfig.m_oVersion)
             {
             case Version::V1:
                 std::cout << "Executing SobelFilter V1" << std::endl;
@@ -485,15 +501,12 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
                 std::cout << "[ERROR]: Executing SobelFilter with Unknown Version" << std::endl;
                 break;
             }
-        
+            break;
         default:
             std::cout << "[ERROR]: Executing Unknown Algorithm" << std::endl;
             break;
+       
     }
-
-    
-    
-    
 }
 
 

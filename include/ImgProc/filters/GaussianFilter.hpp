@@ -26,6 +26,8 @@ namespace ImgProcLab {
                                          float fSigma = 1.0f, 
                                          GaussianVersion oVersion=GaussianVersion::V1);
 
+                
+
                 virtual ~GaussianFilter() = default;
             private :
                 

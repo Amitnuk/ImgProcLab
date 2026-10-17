@@ -39,9 +39,9 @@ struct AlgorithmConfig
     std::optional<int> m_iWidth;    
     std::optional<int> m_iKernelSize;
     std::optional<float> m_fSigma;
-    std::string_view m_sImagePath;
-    Algorithm m_oAlgorithmType;
-    Version   m_oVersion; 
+    std::optional<std::string_view> m_sImagePath;
+    std::optional<Algorithm> m_oAlgorithmType;
+    std::optional<Version>   m_oVersion; 
 };
 
 
