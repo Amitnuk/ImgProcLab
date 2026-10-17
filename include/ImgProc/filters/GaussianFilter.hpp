@@ -1,30 +1,40 @@
 #ifndef GAUSSIAN_FILTER
 #define GAUSSIAN_FILTER 
-#include "ImgProc/core/BaseFilter.hpp"
+#include <string_view>
+#include <opencv2/opencv.hpp>
 #include "math/Array3D.hpp"
 
+namespace ImgProcLab { 
 
-namespace ImgProc { 
+    enum class GaussianVersion
+    {
+        V1,
+        V2,
+        V3,
+        V4,
+        V5,
+        V6
+    };
+
     namespace Filter{
         
-        template <typename T, typename U>
-        class GaussianFilter : public BaseFilter<T,U>
+        class GaussianFilter 
         {   
             public :
-                explicit GaussianFilter(std::size_t iWidth = 1, std::size_t iHeight = 32,std::size_t iChannels = 3,int iThreads = 32, std::size_t iKernelSize = 3, float fSigma = 1.0f);
+                explicit GaussianFilter( std::string_view sImgPath,
+                                         std::size_t iKernelSize = 3, 
+                                         float fSigma = 1.0f, 
+                                         GaussianVersion oVersion=GaussianVersion::V1);
+
                 virtual ~GaussianFilter() = default;
-                virtual void KernelLauncher(const T* pIn_h, U* pOut_h ) override;
-                virtual void CPULauncher(const T* pIn_h, U* pOut_h )  override {}; 
-        
             private :
-                int m_iWidth;
-                int m_iChannels;
-                int m_iHeight;
-                int m_iThreads;
-                int m_iGridDimX;
-                int m_iGridDimY;
+                
                 std::size_t m_iKernelSize;
-                std::size_t m_fSigma;
+                //std::size_t m_iChannels;
+                GaussianVersion m_oVersion;
+                float m_fSigma;
+                cv::Mat m_oInputImage; 
+                cv::Mat m_oOutputImage;
                 Array<float> m_aKernel;
     
                 void createGaussianKernel();

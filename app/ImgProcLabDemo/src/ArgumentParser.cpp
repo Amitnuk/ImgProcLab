@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include "ImgProc/filters/GaussianFilter.hpp"
 
 // ============================================================
 // 3. String to enum conversion
@@ -202,7 +203,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 {
     std::optional<Algorithm> oAlgorithm;
     std::optional<Version> oVersion;
-    std::optional<std::string> oImagePath;
+    std::optional<std::string_view> oImagePath;
     std::optional<int> oKernelSize;
     std::optional<float> oSigma;    
     std::optional<int> oWidth;
@@ -228,8 +229,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 	     throw std::invalid_argument("Duplicate argument: --image");
            }
 
-           oImagePath = std::string(nextValue());
-	   
+           oImagePath = nextValue();
            if(oImagePath->empty() || oImagePath->rfind("--", 0) == 0)
            {
 	     throw std::invalid_argument("Invalid image path");
@@ -341,6 +341,34 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 
 void Parser::executeFilter(const AlgorithmConfig& oConfig)
 {
+    auto displayInfo = [](const AlgorithmConfig& oConfig) 
+    {
+        if(*oConfig.m_iKernelSize)
+        {
+        std::cout << "Kernel size: " << *oConfig.m_iKernelSize << std::endl;
+        }
+
+        if(*oConfig.m_iHeight)
+        {
+        std::cout << "Height: " << *oConfig.m_iHeight << std::endl;
+        }
+
+        if(*oConfig.m_iWidth)
+        {
+        std::cout << "Width: " << *oConfig.m_iWidth << std::endl;
+        }
+
+        if(*oConfig.m_fSigma > 0.0f)
+        {
+        std::cout << "Sigma: " << *oConfig.m_fSigma << std::endl;
+        }
+        if(!oConfig.m_sImagePath.empty())
+        {
+            std::cout << "ImagePath: " << oConfig.m_sImagePath << std::endl;
+        }
+        
+    };
+
     switch(oConfig.m_oAlgorithmType)
     {
         case Algorithm::BoxFilter:
@@ -369,6 +397,9 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
             {
             case Version::V1:
                 std::cout << "Executing GaussianFilter V1" << std::endl;
+                displayInfo(oConfig);
+                
+                ImgProcLab::Filter::GaussianFilter( oConfig.m_sImagePath, *oConfig.m_iKernelSize, *oConfig.m_fSigma, ImgProcLab::GaussianVersion::V1);
                 break;
 
             case Version::V2:
@@ -460,25 +491,8 @@ void Parser::executeFilter(const AlgorithmConfig& oConfig)
             break;
     }
 
-    if(*oConfig.m_iKernelSize)
-    {
-       std::cout << "Kernel size: " << *oConfig.m_iKernelSize << std::endl;
-    }
-
-    if(*oConfig.m_iHeight)
-    {
-       std::cout << "Height: " << *oConfig.m_iHeight << std::endl;
-    }
-
-    if(*oConfig.m_iWidth)
-    {
-       std::cout << "Width: " << *oConfig.m_iWidth << std::endl;
-    }
-
-    if(*oConfig.m_fSigma > 0.0f)
-    {
-       std::cout << "Sigma: " << *oConfig.m_fSigma << std::endl;
-    }
+    
+    
     
 }
 
