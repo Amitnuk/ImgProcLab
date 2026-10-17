@@ -4,7 +4,9 @@
 #include <cassert>
 #include <cstddef> //for std::size_t
 #include "CudaUtils.hpp"
+#include <stdexcept>
 
+//TODO: Must handle cuda funtion failing
 template <typename T>
 class CudaBuffer{
 public :
@@ -19,11 +21,60 @@ public :
     }
     else
     {
-      std::cout << "[ERROR]: did not initialize CUDA BUFFER" << std::endl;
-      return;
+      throw std::invalid_argument("CudaBuffer size must be greater than zero");
     }
     
   }
+
+  CudaBuffer( const CudaBuffer<T>& oCudaBuffer)
+  {
+    m_iSize = oCudaBuffer.m_iSize;
+    CUDA_CHECK(cudaMalloc((void**)&m_pData, oCudaBuffer.m_iSize));
+    CUDA_CHECK(cudaMemcpy(m_pData, oCudaBuffer.m_pData, oCudaBuffer.m_iSize, cudaMemcpyDeviceToDevice ));
+  }
+
+  CudaBuffer<T>& operator=(const CudaBuffer<T> &oCudaBuffer)
+  {
+
+    if(&oCudaBuffer == this)
+    {
+      return *this;
+    }
+
+    CUDA_CHECK(cudaFree(m_pData));
+    m_iSize = oCudaBuffer.m_iSize;
+    CUDA_CHECK(cudaMalloc((void**)&m_pData, oCudaBuffer.m_iSize));
+    CUDA_CHECK(cudaMemcpy(m_pData, oCudaBuffer.m_pData, oCudaBuffer.m_iSize, cudaMemcpyDeviceToDevice ));
+
+    return *this;
+  }
+
+  CudaBuffer(CudaBuffer<T>&& oCudaBuffer) noexcept  
+  : m_pData(oCudaBuffer.m_pData)   
+  , m_iSize(oCudaBuffer.m_iSize)
+  {
+    oCudaBuffer.m_pData = nullptr;
+    oCudaBuffer.m_iSize = 0;
+  }
+
+  CudaBuffer<T>& operator=(CudaBuffer<T> &&oCudaBuffer) noexcept
+  {
+
+    if(&oCudaBuffer == this)
+    {
+      return *this;
+    }
+
+    CUDA_CHECK(cudaFree(m_pData));
+    m_iSize = oCudaBuffer.m_iSize;
+    m_pData = oCudaBuffer.m_pData;
+    
+    oCudaBuffer.m_pData = nullptr;
+    oCudaBuffer.m_iSize = 0;
+
+    return *this;
+    
+  }    
 
   ~CudaBuffer() { cudaFree(m_pData); }
   
