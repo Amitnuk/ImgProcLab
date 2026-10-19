@@ -121,23 +121,23 @@ void Parser::validateConfig(const AlgorithmConfig& oConfig)
       throw std::invalid_argument("Missing required argument: --image");
     }
 
-    if(!oConfig.m_oAlgorithmType)
+    if(!oConfig.m_eAlgorithmType)
     {
        throw std::invalid_argument("Missing required argument: --algo");
     }
 
-    if(!oConfig.m_oVersion)
+    if(!oConfig.m_eVersion)
     {
        throw std::invalid_argument("Missing required argument: --version");
     }
     
     
-    if(!isCompatible(*oConfig.m_oAlgorithmType, *oConfig.m_oVersion))
+    if(!isCompatible(*oConfig.m_eAlgorithmType, *oConfig.m_eVersion))
     {
        throw std::invalid_argument("Selected version is not supported by the selected algorithm.");
     }
 
-    switch(*oConfig.m_oAlgorithmType)
+    switch(*oConfig.m_eAlgorithmType)
     {
        case Algorithm::GaussianFilter:
         if(!oConfig.m_iKernelSize)
@@ -219,6 +219,13 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     std::optional<float> oSigma;    
     std::optional<int> oWidth;
     std::optional<int> oHeight;
+    std::optional<int> oIterations;
+    std::optional<int> oWarmUps;
+    int iIterations;
+    int iGPUWarmUps;
+    bool bBenchmark = false;
+    bool bIsIterationProvided = false;
+    bool bIsWarmupProvided = false;
     
     for(size_t i = 1; i < argc; i++)
     {
@@ -233,25 +240,35 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 	        return argv[++i];
         };
 
+        auto argumentCheck =[](const std::string& sArgument, const bool bState)
+        {
+            if(bState)
+            {
+                throw std::invalid_argument("Duplicate argument: "+std::string(sArgument));
+            } 
+        };
+
         if( sArgument == "--image")
         {
            if( oImagePath )
-	   {
-	     throw std::invalid_argument("Duplicate argument: --image");
+           {
+                throw std::invalid_argument("Duplicate argument: --image");
            }
 
            oImagePath = nextValue();
            if(oImagePath->empty() || oImagePath->rfind("--", 0) == 0)
            {
-	     throw std::invalid_argument("Invalid image path");
-	   }
+                throw std::invalid_argument("Invalid image path");
+	        }
         }
         else if( sArgument == "--algo")
         {
-            if(oAlgorithm)
+            /*if(oAlgorithm)
             {
                 throw std::invalid_argument("Duplicate argument: --algo");
-            }
+            }*/
+
+            argumentCheck("--algo", static_cast<bool>(oAlgorithm));
             oAlgorithm = parseAlgorithm(nextValue());   
         }
         else if(sArgument == "--version")
@@ -287,16 +304,61 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 	            throw std::invalid_argument("Duplicate argument : --height");
 	        }            
 
-	    oHeight = parseInteger(nextValue());
+	        oHeight = parseInteger(nextValue());
         }
         else if(sArgument == "--width")
         {
-	    if(oWidth)
-            {
-	      throw std::invalid_argument("Duplicate argument : --width");
-	    }            
-	    oWidth = parseInteger(nextValue());
+            if(oWidth)
+                {
+            throw std::invalid_argument("Duplicate argument : --width");
+            }            
+	        oWidth = parseInteger(nextValue());
         }
+        else if(sArgument == "--benchmark")
+        {
+            if(bBenchmark)
+            {
+                throw std::invalid_argument("Duplicate argument : --benchmark");
+            }
+            bBenchmark = true;    
+        }
+        else if(sArgument == "--iterations")
+        {
+            if (bIsIterationProvided)
+            {
+                throw std::invalid_argument("Duplicate argument : --iterations");
+            }
+            oIterations = parseInteger(nextValue());
+
+
+            if( !oIterations || *oIterations <= 0)
+            {
+                throw std::invalid_argument("Number of iteration must be a positive number");
+            }
+            
+            iIterations = *oIterations;
+            bIsIterationProvided = true;
+        }
+        else if(sArgument == "--warmups")
+        {
+            if (bIsWarmupProvided)
+            {
+                throw std::invalid_argument("Duplicate argument : --warmups");
+            }
+            oWarmUps = parseInteger(nextValue());
+
+            if( !oWarmUps || *oWarmUps <= 0  )
+            {
+                throw std::invalid_argument("Warmup must be a positive number");
+            }
+            
+
+
+
+            iGPUWarmUps = *oWarmUps;
+            bIsWarmupProvided = true;
+        }
+        
         else
         {
             throw std::invalid_argument("Unknown argument: "  + std::string(sArgument));
@@ -338,10 +400,16 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
         throw std::invalid_argument("Missing required argument: --version");
     }
 
+    if(!bBenchmark && (bIsWarmupProvided || bIsIterationProvided))
+    {
+        throw std::invalid_argument("--iterations and --warmaps requires --benchmark");
+    }
     
     
-    m_oConfig = AlgorithmConfig{oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
+    m_oConfig = AlgorithmConfig{ iIterations, iGPUWarmUps, bBenchmark, oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
     
+    validateConfig(m_oConfig);        
+
     return m_oConfig;
 }
 
@@ -356,157 +424,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 
 void Parser::executeAlgorithm(const AlgorithmConfig& oConfig)
 {
-    auto displayInfo = [](const AlgorithmConfig& oConfig) 
-    {
-        if(oConfig.m_iKernelSize)
-        {
-        std::cout << "Kernel size: " << *oConfig.m_iKernelSize << std::endl;
-        }
-
-        if(oConfig.m_iHeight)
-        {
-        std::cout << "Height: " << *oConfig.m_iHeight << std::endl;
-        }
-
-        if(oConfig.m_iWidth)
-        {
-        std::cout << "Width: " << *oConfig.m_iWidth << std::endl;
-        }
-
-        if(oConfig.m_fSigma)
-        {
-        std::cout << "Sigma: " << *oConfig.m_fSigma << std::endl;
-        }
-        if(!(*oConfig.m_sImagePath).empty())
-        {
-            std::cout << "ImagePath: " << *oConfig.m_sImagePath << std::endl;
-        }
-        
-    };
-
-    validateConfig(oConfig);        
-    switch(*oConfig.m_oAlgorithmType)
-    {
-        case Algorithm::BoxFilter:
-            switch(*oConfig.m_oVersion)
-            {
-            case Version::V1:
-                std::cout << "Executing BoxFilter V1" << std::endl;
-                break;
-
-            case Version::V2:
-                std::cout << "Executing BoxFilter V2" << std::endl;
-                break;
-
-            case Version::V3:
-                std::cout << "Executing BoxFilter V3" << std::endl;
-                break;
-            
-            default:
-                std::cout << "[ERROR]: Executing BoxFilter with Unknown Version" << std::endl;
-                break;
-            }
-            break;
-        
-        case Algorithm::GaussianFilter:
-            switch(*oConfig.m_oVersion)
-            {
-            case Version::V1:
-                std::cout << "Executing GaussianFilter V1" << std::endl;
-                displayInfo(oConfig);
-                
-                ImgProcLab::Filter::GaussianFilter( *oConfig.m_sImagePath, *oConfig.m_iKernelSize, *oConfig.m_fSigma, ImgProcLab::GaussianVersion::V1);
-                break;
-
-            case Version::V2:
-                std::cout << "Executing GaussianFilter V2" << std::endl;
-                break;
-
-            case Version::V3:
-                std::cout << "Executing GaussianFilter V3" << std::endl;
-                break;
-            case Version::V4:
-                std::cout << "Executing GaussianFilter V4" << std::endl;
-                break;
-            case Version::V5:
-                std::cout << "Executing GaussianFilter V5" << std::endl;
-                break;
-            case Version::V6:
-                std::cout << "Executing GaussianFilter V6" << std::endl;
-                break;
-            
-            default:
-                std::cout << "[ERROR]: Executing GaussianFilter with Unknown Version" << std::endl;
-                break;
-            }
-            break;
-
-        case Algorithm::Histogram :
-            switch(*oConfig.m_oVersion)
-            {
-            case Version::V1:
-                std::cout << "Executing Histogram V1" << std::endl;
-                break;
-
-            case Version::V2:
-                std::cout << "Executing Histogram V2" << std::endl;
-                break;
-
-            case Version::V3:
-                std::cout << "Executing Histogram V3" << std::endl;
-                break;
-            
-            default:
-                std::cout << "[ERROR]: Executing Histogram with Unknown Version" << std::endl;
-                break;
-            }
-            break;
-
-        case Algorithm::MedianFilter :
-            switch(*oConfig.m_oVersion)
-            {
-            case Version::V1:
-                std::cout << "Executing MedianFilter V1" << std::endl;
-                break;
-
-            case Version::V2:
-                std::cout << "Executing MedianFilter V2" << std::endl;
-                break;
-
-            case Version::V3:
-                std::cout << "Executing MedianFilter V3" << std::endl;
-                break;
-            
-            default:
-                std::cout << "[ERROR]: Executing MedianFilter with Unknown Version" << std::endl;
-                break;
-            }
-            break;
-        case Algorithm::SobelFilter :
-            switch(*oConfig.m_oVersion)
-            {
-            case Version::V1:
-                std::cout << "Executing SobelFilter V1" << std::endl;
-                break;
-
-            case Version::V2:
-                std::cout << "Executing SobelFilter V2" << std::endl;
-                break;
-
-            case Version::V3:
-                std::cout << "Executing SobelFilter V3" << std::endl;
-                break;
-            
-            default:
-                std::cout << "[ERROR]: Executing SobelFilter with Unknown Version" << std::endl;
-                break;
-            }
-            break;
-        default:
-            std::cout << "[ERROR]: Executing Unknown Algorithm" << std::endl;
-            break;
-       
-    }
+    
 }
 
 

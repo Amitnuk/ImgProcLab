@@ -8,11 +8,18 @@ template <typename T>
 class Array {
 
 public:
-  // TODO: move and copy contructors 
+  Array():m_iHeight(0), m_iWidth(0), m_iDepth(0) {}
+
   explicit Array(std::size_t iHeight, std::size_t iWidth, std::size_t iDepth = 1);
   T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0);
   const T& operator()(std::size_t iRow, std::size_t iCol, std::size_t iDepth = 0) const;
-  
+
+  Array(const Array&) = delete;
+  Array& operator=(const Array&)= delete;
+
+  Array(Array&&) noexcept = default;
+  Array& operator=(Array&&) noexcept = default;
+
   inline T* data() {return m_vData.data();}
   inline const T* data() const {return m_vData.data();}
   inline std::size_t height() const {return  m_iHeight;}
@@ -25,7 +32,7 @@ private:
   std::size_t m_iHeight;
   std::size_t m_iWidth;
   std::size_t m_iDepth;  
-  std::vector<T> m_vData;
+  std::vector<T> m_vData; // without the destructor, the compiler generates a move semantic constructor
 }  ;
 
 

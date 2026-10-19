@@ -3,8 +3,9 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
+
+#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
 #include "ImgProc/filters/GaussianFilter.hpp"
-#include "ImgProc/cuda/GaussianCuda.hpp"
 
 #define MAX_KERNEL_SIZE 15
 using uchar = unsigned char;
@@ -14,20 +15,20 @@ namespace ImgProcLab
     namespace Filter{
 
         
-        GaussianFilter::GaussianFilter(std::string_view sImgPath,
-                                       std::size_t iKernelSize /*=3*/, 
-                                       float fSigma /*= 1.0f*/, 
-                                       GaussianVersion m_oVersion /*=GaussianVersion::V1*/)
+        GaussianFilter::GaussianFilter(const cv::Mat oImage,
+                                       const std::size_t iKernelSize /*=3*/, 
+                                       const float fSigma /*= 1.0f*/, 
+                                       const GaussianVersion eVersion /*=GaussianVersion::V1*/)
         : m_iKernelSize(iKernelSize)
         //, m_iChannels(3)
-        , m_oVersion(m_oVersion)
+        , m_eVersion(eVersion)
         , m_fSigma(fSigma)
+        , m_oInputImage(oImage)
         {
 
-            m_oInputImage = cv::imread(std::string(sImgPath));
             if(m_oInputImage.empty())
             {
-                std::cout << sImgPath << std::endl;
+                std::cout << m_oInputImage << std::endl;
                 throw std::invalid_argument("Input Image is empty");
             }
         
@@ -46,17 +47,22 @@ namespace ImgProcLab
                 throw std::invalid_argument("Gaussian sigma must be positive");
             }
             
-            
+            auto [iWidth, iHeight] = oImage.size();
             std::cout << "Gaussian Filter" << std::endl; 
           
+            std::cout << "(height, width)="<< "("<< iHeight << "," << iWidth<<")"<< std::endl;
+            std::cout << "(height, width)="<< "("<< m_oInputImage.rows << "," << m_oInputImage.cols<<")"<< std::endl;
+            
 
-            cv::imshow("Original", m_oInputImage);
-            switch(m_oVersion)
+            switch(m_eVersion)
             {
                 case GaussianVersion::V1:
-                    detail::gaussianV1(m_oInputImage, m_oOutputImage, m_iKernelSize, m_fSigma);
+                {
+                    uchar* pImage = m_oInputImage.ptr<uchar>();
+                    m_eGaussianData = detail::prepareGaussian(pImage, fSigma, iKernelSize, iHeight, iWidth);
                     break;
-                
+
+                }
                 case GaussianVersion::V2:
                     break;
                 
@@ -74,8 +80,7 @@ namespace ImgProcLab
                 default:
                     break;
             }
-            cv::imshow("GaussianFilter", m_oOutputImage);
-            cv::waitKey(0);
+            
         }
     }
 

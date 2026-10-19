@@ -1,3 +1,5 @@
+#pragma once
+
 #include <optional> 
 #include <string_view>
 
@@ -35,13 +37,17 @@ enum class Version
 
 struct AlgorithmConfig
 {
-    std::optional<int> m_iHeight;
-    std::optional<int> m_iWidth;    
-    std::optional<int> m_iKernelSize;
-    std::optional<float> m_fSigma;
-    std::optional<std::string_view> m_sImagePath;
-    std::optional<Algorithm> m_oAlgorithmType;
-    std::optional<Version>   m_oVersion; 
+
+  int m_iIterations = 100;
+  int m_iGPUWarmUps = 10;
+  bool m_bBenchmark = false;
+  std::optional<int> m_iHeight;
+  std::optional<int> m_iWidth;    
+  std::optional<int> m_iKernelSize;
+  std::optional<float> m_fSigma;
+  std::optional<std::string_view> m_sImagePath;
+  std::optional<Algorithm> m_eAlgorithmType;
+  std::optional<Version>   m_eVersion;
 };
 
 

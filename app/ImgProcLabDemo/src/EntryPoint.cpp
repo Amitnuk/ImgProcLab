@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include "ArgumentParser.hpp"
+#include "AlgorithmRunner.hpp"
 
 
 
@@ -18,7 +19,20 @@ int main(int argc, char* argv[])
     try
     {
         const AlgorithmConfig& oConfig = oParser.parseArguments(argc, argv);
-        oParser.executeAlgorithm(oConfig);
+
+
+        if( oConfig.m_bBenchmark )
+        {
+          std::cout <<"HHHHHHHHHHHHHHHH";
+        }
+        else
+        {
+            AlgorithmRunner oRunner(oConfig);
+            oRunner.run();
+        }
+        
+        
+        
 	    
         return 0;
     }
