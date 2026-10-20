@@ -4,6 +4,7 @@
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
 
 using namespace ImgProcLab::detail;
+
 class AlgorithmRunner
 {
     public :

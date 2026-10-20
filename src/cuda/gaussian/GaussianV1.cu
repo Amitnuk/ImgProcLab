@@ -2,45 +2,6 @@
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
 #include "cuda/common/CudaUtils.hpp"
 
-/*
-
-if(col < iWidth && row < iHeight )
-        {
-            int half = iKernelSize/2;
-            float vBGR[3] = {0.0f, 0.0f, 0.0f}; 
-            for( int y = -half; y <= half; ++y )
-            {
-                for (int x = -half; x <= half; ++x)
-                {
-                    int iCol = col + x;
-                    int iRow = row + y;
-                    
-                    if(( iCol < iWidth && iCol >= 0 ) && (iRow < iHeight && iRow >= 0))
-                    {
-                        int iImageIndex  = (iRow*iWidth + iCol)*CHANNELS;
-                        int iKernelIndex = (y+half)*iKernelSize + (x + half);
-
-                        vBGR[0] += static_cast<float>(pIn[ iImageIndex     ])  ;
-                        vBGR[1] += static_cast<float>(pIn[ iImageIndex + 1 ]) ;
-                        vBGR[2] += static_cast<float>(pIn[ iImageIndex + 2 ])  ;
-
-                    }
-                    
-                }
-                
-                
-            }
-
-            int iIndex = (row*iWidth + col)*CHANNELS;
-            pOut[ iIndex + 0 ] = static_cast<uchar>(vBGR[0]);
-            pOut[ iIndex + 1 ] = static_cast<uchar>(vBGR[1]);
-            pOut[ iIndex + 2 ] = static_cast<uchar>(vBGR[2]);
-
-        }
-
-
-*/
-
 namespace ImgProcLab::detail
 {
     constexpr int CHANNELS = 3;
@@ -75,9 +36,9 @@ namespace ImgProcLab::detail
             }
 
             int iIndex = (row*iWidth + col)*CHANNELS;
-            pOut[ iIndex + 0 ] = static_cast<uchar>(vBGR[0]);
-            pOut[ iIndex + 1 ] = static_cast<uchar>(vBGR[1]);
-            pOut[ iIndex + 2 ] = static_cast<uchar>(vBGR[2]);
+            pOut[ iIndex + 0 ] = static_cast<uchar>(__float2int_rn(vBGR[0]));
+            pOut[ iIndex + 1 ] = static_cast<uchar>(__float2int_rn(vBGR[1]));
+            pOut[ iIndex + 2 ] = static_cast<uchar>(__float2int_rn(vBGR[2]));
         }
         
     }
@@ -106,8 +67,6 @@ namespace ImgProcLab::detail
                                                      iWidth,
                                                      eData.m_iKernelSize);
 
-       
-     
     }
 
     

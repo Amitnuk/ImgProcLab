@@ -14,6 +14,12 @@ enum class Backend
 template<typename LaunchFunction>
 float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool& bBenchmark, const int& iWarmups = 10, const int& iIterations = 100)
 {
+
+    if(iWarmups < 0 || iIterations <= 0)
+    {
+        throw std::invalid_argument("Invalid benchmark parameters");
+    }
+
     if(!bBenchmark)
     {
         throw std::invalid_argument("Can only launch comparision while benchmarking, add --benchmark");
@@ -28,9 +34,15 @@ float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool
 
     if(backend == Backend::CPU)
     {
-        auto oStart = std::chrono::steady_clock::now();
 
         for(int i = 0; i< iWarmups; i++)
+        {
+            launch();
+        }
+
+        auto oStart = std::chrono::steady_clock::now();
+
+        for(int i = 0; i< iIterations; i++)
         {
             launch();
         }
@@ -68,6 +80,8 @@ float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool
         std::cout << "Average OpenCV CUDA Kernel time: "<< fTimeElapsed << "ms\n";
         CUDA_CHECK(cudaGetLastError());
         CUDA_CHECK(cudaDeviceSynchronize());
+        CUDA_CHECK(cudaEventDestroy(oStart));
+        CUDA_CHECK(cudaEventDestroy(oStop));
     }
     else
     {

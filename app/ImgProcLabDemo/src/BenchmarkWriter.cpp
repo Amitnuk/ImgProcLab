@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "BenchmarkWriter.hpp"
 #include <iostream>
+#include <filesystem>
 
 void BenchmarkWriter::writeCSV(const std::string& sPath, const BenchmarResult& oBenchmarkResult)
 {
@@ -13,7 +14,16 @@ void BenchmarkWriter::writeCSV(const std::string& sPath, const BenchmarResult& o
         throw std::invalid_argument("Could not open file: "+ sPath);
     }
 
-    oFile << "Algorithm,Version,Warmups,Iterations,KernelSize,Width,Height,AverageMs" << std::endl;
+
+    namespace fs =std::filesystem;
+    const bool bWriterHeader = !fs::exists(sPath) || fs::file_size(sPath) == 0;
+
+    if(bWriterHeader)
+    {
+        oFile << "Algorithm,Version,Warmups,Iterations,KernelSize,Width,Height,AverageMs" <<std::endl;
+    }
+    
+
     oFile << oBenchmarkResult.m_sAlgorithm  << ',';
     oFile << oBenchmarkResult.m_sVersion  << ',';
     oFile << oBenchmarkResult.m_iWarmups  << ',';

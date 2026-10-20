@@ -49,7 +49,6 @@ namespace ImgProcLab
             
             auto [iWidth, iHeight] = oImage.size();
             std::cout << "Gaussian Filter" << std::endl; 
-          
             std::cout << "(height, width)="<< "("<< iHeight << "," << iWidth<<")"<< std::endl;
             std::cout << "(height, width)="<< "("<< m_oInputImage.rows << "," << m_oInputImage.cols<<")"<< std::endl;
             
