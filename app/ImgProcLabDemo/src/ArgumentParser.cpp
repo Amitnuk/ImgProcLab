@@ -221,13 +221,13 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     std::optional<int> oHeight;
     std::optional<int> oIterations;
     std::optional<int> oWarmUps;
-    int iIterations;
-    int iGPUWarmUps;
+    int iIterations = 100;
+    int iGPUWarmUps = 10;
     bool bBenchmark = false;
     bool bIsIterationProvided = false;
     bool bIsWarmupProvided = false;
     
-    for(size_t i = 1; i < argc; i++)
+    for(int i = 1; i < argc; i++)
     {
         std::string_view sArgument = argv[i];
 
@@ -240,11 +240,11 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 	        return argv[++i];
         };
 
-        auto argumentCheck =[](const std::string& sArgument, const bool bState)
+        auto argumentCheck =[](const std::string& sArgs, const bool bState)
         {
             if(bState)
             {
-                throw std::invalid_argument("Duplicate argument: "+std::string(sArgument));
+                throw std::invalid_argument("Duplicate argument: "+std::string(sArgs));
             } 
         };
 
@@ -352,9 +352,6 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
                 throw std::invalid_argument("Warmup must be a positive number");
             }
             
-
-
-
             iGPUWarmUps = *oWarmUps;
             bIsWarmupProvided = true;
         }
@@ -414,22 +411,8 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
 }
 
 
-
-
-
 // ============================================================
-// 8. Filter dispatcher
-// ============================================================
-
-
-void Parser::executeAlgorithm(const AlgorithmConfig& oConfig)
-{
-    
-}
-
-
-// ============================================================
-// 9. Usage
+// 8. Usage
 // ============================================================
 
 void Parser::printUsage(const char* executable)

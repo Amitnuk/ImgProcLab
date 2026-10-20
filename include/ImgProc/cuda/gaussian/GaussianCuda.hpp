@@ -14,7 +14,7 @@ namespace ImgProcLab::detail
                                  const std::size_t iHeight, 
                                  const std::size_t iWidth);
 
-    void gaussianV1(GaussianData& eData);
+    void gaussianV1(GaussianData& eData, const int iThreads = 32);
 
 
     void create2DGaussianKernel(int iKernelSize, float fSigma);

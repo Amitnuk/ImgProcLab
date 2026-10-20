@@ -84,52 +84,30 @@ namespace ImgProcLab::detail
 
 
     
-    void gaussianV1(GaussianData& eData)
+    void gaussianV1(GaussianData& eData, const int iThreads/*=32*/)
     {
 
-        CudaExecutionContext& eCudaExContex = eData.m_eCudaExecutionContext;
+        CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;
         
-        int iHeight  = eCudaExContex.m_iHeight;   
-        int iWidth   = eCudaExContex.m_iWidth; 
+        const int& iHeight  = eCudaContext.m_iHeight;   
+        const int& iWidth   = eCudaContext.m_iWidth; 
 
-        
-        std::cout << "Gaussian Kernel Launcher " << std::endl;
-        int iThreads = 32;
-        int iGridDimX = (iWidth  + iThreads - 1)/iThreads;
-        int iGridDimY = (iHeight + iThreads - 1)/iThreads;
+        const int iGridDimX = (iWidth  + iThreads - 1)/iThreads;
+        const int iGridDimY = (iHeight + iThreads - 1)/iThreads;
 
         dim3 oGridDim(iGridDimX, iGridDimY);
         dim3 oBlockDim(iThreads, iThreads); 
 
-        std::cout << "grid=="<< "("<< iGridDimX << "," <<iGridDimY<<")"<< std::endl;
-        std::cout << "block=="<< "("<< iThreads << "," <<iThreads<<")"<< std::endl;
-
-        cudaEvent_t oStart, oStop;
-        float fTimeInMS;
-
-    
-        CUDA_CHECK(cudaEventCreate(&oStart));
-        CUDA_CHECK(cudaEventCreate(&oStop));
-        CUDA_CHECK(cudaEventRecord(oStart));
         
-
-        GaussianFilterKernel<<<oGridDim,oBlockDim>>>(eCudaExContex.m_oDeviceInput.Data(),
-                                                     eCudaExContex.m_oDeviceOutputs.Data(),
-                                                     eCudaExContex.m_oKernel.Data(),
+        GaussianFilterKernel<<<oGridDim,oBlockDim>>>(eCudaContext.m_oDeviceInput.Data(),
+                                                     eCudaContext.m_oDeviceOutputs.Data(),
+                                                     eCudaContext.m_oKernel.Data(),
                                                      iHeight,
                                                      iWidth,
                                                      eData.m_iKernelSize);
 
-        CUDA_CHECK(cudaEventRecord(oStop));
-        CUDA_CHECK(cudaEventSynchronize(oStop));
-        
-        CUDA_CHECK(cudaEventElapsedTime(&fTimeInMS, oStart, oStop));
-        std::cout << "CUDA kernel: " << fTimeInMS << "ms\n";
-
-        CUDA_CHECK(cudaGetLastError());
-        CUDA_CHECK(cudaDeviceSynchronize());
-
-
+       
+     
     }
 
     

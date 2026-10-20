@@ -21,19 +21,8 @@ int main(int argc, char* argv[])
         const AlgorithmConfig& oConfig = oParser.parseArguments(argc, argv);
 
 
-        if( oConfig.m_bBenchmark )
-        {
-          std::cout <<"HHHHHHHHHHHHHHHH";
-        }
-        else
-        {
-            AlgorithmRunner oRunner(oConfig);
-            oRunner.run();
-        }
-        
-        
-        
-	    
+        AlgorithmRunner oRunner(oConfig);
+        oRunner.run();
         return 0;
     }
     catch(const std::exception& e)
