@@ -6,9 +6,9 @@
 
 
 template<typename LaunchFunction>
-void executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const int& iWarmups = 10, const int& iIterations = 100)
+float executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const int& iWarmups = 10, const int& iIterations = 100)
 {
-
+    float fElapsedTime = 0.0f;
 #ifdef PROFILE_CUDA
         if(!bBenchmark)
         {
@@ -44,9 +44,7 @@ void executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const 
         CUDA_CHECK(cudaGetLastError());
 
         cudaEvent_t oStart, oStop;
-        float fElapsedTime = 0.0f;
-
-
+       
         CUDA_CHECK(cudaEventCreate(&oStart));
         CUDA_CHECK(cudaEventCreate(&oStop));
         CUDA_CHECK(cudaEventRecord(oStart));
@@ -59,10 +57,12 @@ void executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const 
         CUDA_CHECK(cudaEventRecord(oStop))
         CUDA_CHECK(cudaEventSynchronize(oStop));
         CUDA_CHECK(cudaEventElapsedTime(&fElapsedTime, oStart, oStop));
-
-        std::cout << "Average kernel time: "<< fElapsedTime/static_cast<float>(iIterations) << "ms\n";
+        fElapsedTime /= static_cast<float>(iIterations);
+        std::cout << "Average kernel time: "<< fElapsedTime << "ms\n";
     }
 #endif
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
+
+    return fElapsedTime;
 }

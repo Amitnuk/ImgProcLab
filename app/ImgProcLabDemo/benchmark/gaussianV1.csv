@@ -1,0 +1,2 @@
+Algorithm,Version,Warmups,Iterations,KernelSize,Width,Height,AverageMs
+gaussian,v1,10,100,15,453,340,0.0960717

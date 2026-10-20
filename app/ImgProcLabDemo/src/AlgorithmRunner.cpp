@@ -1,8 +1,10 @@
 #include <opencv2/opencv.hpp>
 #include "AlgorithmRunner.hpp"
+#include "BenchmarkWriter.hpp"
 #include <ImgProc/cuda/gaussian/GaussianData.hpp>
 #include <ImgProc/filters/GaussianFilter.hpp>
 #include <cuda/common/CudaExecution.hpp>
+#include "config.h"
 
 void AlgorithmRunner::prepare()
 {
@@ -53,14 +55,24 @@ void AlgorithmRunner::prepare()
                     m_eGaussianData =  std::move(oGaussianFilter.getGaussianData());
                     cv::imshow("Original", oImage);
 
-                    executeCuda(
-                        [&](){ ImgProcLab::detail::gaussianV1(m_eGaussianData);}, 
-                        m_eConfig.m_bBenchmark, 
-                        m_eConfig.m_iGPUWarmUps, 
-                        m_eConfig.m_iIterations
+                    float fElapsedTime = executeCuda([&](){ ImgProcLab::detail::gaussianV1(m_eGaussianData);}, 
+                                                     m_eConfig.m_bBenchmark, 
+                                                     m_eConfig.m_iGPUWarmUps, 
+                                                     m_eConfig.m_iIterations
                     );
+
                     int iHeight   = m_eGaussianData.m_eCudaExecutionContext.m_iHeight;   
-                    int iWidth    = m_eGaussianData.m_eCudaExecutionContext.m_iWidth; 
+                    int iWidth    = m_eGaussianData.m_eCudaExecutionContext.m_iWidth;
+                   
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        BenchmarResult oBenchmarResult{iWidth, iHeight, *m_eConfig.m_iKernelSize, m_eConfig.m_iGPUWarmUps, m_eConfig.m_iIterations, fElapsedTime,"gaussian", "v1"};  
+                        const std::string& sPath = GetBenchmarkDir() + "gaussianV1.csv"; 
+                        
+                        BenchmarkWriter::writeCSV(sPath, oBenchmarResult);
+                    }
+                    
+
                     constexpr int iChannels = 3;
                     uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
                             

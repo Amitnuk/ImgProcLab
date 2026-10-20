@@ -1,0 +1,10 @@
+#pragma once
+#include <string> 
+
+
+std::string GetBenchmarkDir()
+{
+    return "${BENCHMARK_FOLDER_NAME}/";
+}
+
+
