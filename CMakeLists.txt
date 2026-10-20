@@ -46,6 +46,7 @@ add_library(ImgProcLab STATIC
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaBuffer.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecution.hpp
 			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecutionContext.hpp
+			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/OpenCVExecution.hpp
 			  )
 
 			  

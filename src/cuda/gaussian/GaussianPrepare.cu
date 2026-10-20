@@ -22,7 +22,7 @@ namespace ImgProcLab::detail
             for (int x = -iHalf; x <= iHalf; ++x)
             {
 
-                float fValue = (std::exp((std::pow(x, 2) + std::pow(x,2))*fInvTwoSigmaSquared));
+                float fValue = (std::exp((std::pow(x, 2) + std::pow(y,2))*fInvTwoSigmaSquared));
                 pCoeficients[(y+iHalf)*iKernelSize + x+iHalf] = fValue;
             
                 sum += fValue;

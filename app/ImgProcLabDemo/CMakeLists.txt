@@ -17,7 +17,7 @@ target_include_directories(ImgProcLabDemo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/in
 target_link_libraries( ImgProcLabDemo PRIVATE ImgProcLab)
 
 
-set(BENCHMARK_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}/benchmark")
+set(BENCHMARK_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}/benchmark/results")
 
 configure_file( "Config.h.in"
                 "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h" )

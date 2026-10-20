@@ -5,7 +5,7 @@
 
 void BenchmarkWriter::writeCSV(const std::string& sPath, const BenchmarResult& oBenchmarkResult)
 {
-    std::ofstream oFile(sPath);
+    std::ofstream oFile(sPath, std::ios_base::app);
 
 
     if(!oFile.is_open())
@@ -29,6 +29,6 @@ void BenchmarkWriter::writeCSV(const std::string& sPath, const BenchmarResult& o
         throw std::runtime_error("Could not write benchmark CSV: " + sPath);
     }
 
-    std::cout << "Benchmark saved in: " << sPath << std::endl;
+    //std::cout << "Benchmark saved in: " << sPath << std::endl;
     
 }
