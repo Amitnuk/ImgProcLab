@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
 #include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
-#include "cuda/common/CudaUtils.hpp"
 #include <cmath>
 
 
@@ -14,35 +13,63 @@ namespace ImgProcLab::detail
     void create2DGaussianKernel(float *pCoeficients, int iKernelSize, float fSigma)
     {   
         
-        const float fInvTwoSigmaSquared = -0.5f / (fSigma * fSigma);
+      const float fInvTwoSigmaSquared = -0.5f / std::pow(fSigma,2);
         int iHalf = iKernelSize/2;
         float sum = 0.0f;
+        float fValue = 0.0f;
         for (int y = -iHalf; y <= iHalf; ++y)
         {
             for (int x = -iHalf; x <= iHalf; ++x)
             {
 
-                float fValue = (std::exp((std::pow(x, 2) + std::pow(y,2))*fInvTwoSigmaSquared));
+                fValue = (std::exp((std::pow(x, 2) + std::pow(y,2))*fInvTwoSigmaSquared));
                 pCoeficients[(y+iHalf)*iKernelSize + x+iHalf] = fValue;
             
                 sum += fValue;
             }
         }
 
-        const float invSum = 1.0f / sum;
+        const float fInvSum = 1.0f / sum;
         for (int y = 0; y < iKernelSize; ++y)
         {
             for( int x = 0; x < iKernelSize; ++x )
             {
-                pCoeficients[y*iKernelSize + x] *= invSum;
+                pCoeficients[y*iKernelSize + x] *= fInvSum;
             }
         }
         
     
     }
+  
+    void create1DGaussianKernel(float *pCoeficients, int iKernelSize, float fSigma)
+    {
+        const float fInvTwoSigmaSquared = -0.5f/std::pow(fSigma,2);
+        int iHalf = iKernelSize/2;
+        float fSum = 0.0f;
+        float fValue = 0.0f;
+        for(int i = -iHalf; i <= iHalf; ++i)
+        {
+            fValue = std::exp(std::pow(i, 2) * fInvTwoSigmaSquared);
+            pCoeficients[(i+iHalf)] = fValue;
+            fSum += fValue;
+        }
+
+        const float fInvSum = 1.0f/fSum; 
+        for(int i = 0; i < iKernelSize; ++i)
+        {
+            pCoeficients[i] *= fInvSum;
+        }
+
+    }
 
 
-    GaussianData prepareGaussian(const uchar* pImage, const float fSigma, const std::size_t iKernelSize , const std::size_t iHeight, const std::size_t iWidth)
+  
+  GaussianData prepareGaussian(const uchar* pImage,
+                               const float fSigma,
+                               const std::size_t iKernelSize ,
+                               const std::size_t iHeight,
+                               const std::size_t iWidth,
+                               const Separable eCase /*= Separable::FALSE*/)
     {
 
 
@@ -66,7 +93,14 @@ namespace ImgProcLab::detail
         eData.m_fSigma = fSigma;
 
         eData.m_aCoeficients = Array<float>(iKernelSize, iKernelSize);
-        create2DGaussianKernel(eData.m_aCoeficients.data(), iKernelSize, fSigma);
+        if(eCase == Separable::FALSE)
+        {
+            create2DGaussianKernel(eData.m_aCoeficients.data(), iKernelSize, fSigma);
+        }
+        else
+        {
+          create1DGaussianKernel(eData.m_aCoeficients.data(), iKernelSize, fSigma);
+        }
 
         
         
@@ -77,6 +111,10 @@ namespace ImgProcLab::detail
         {
             eData.m_eCudaExecutionContext.m_oDeviceInput.allocate(iImageInBytes);
             eData.m_eCudaExecutionContext.m_oDeviceOutputs.allocate(iImageInBytes);
+            if(eCase == Separable::TRUE)
+            {
+              eData.m_eCudaExecutionContext.m_oDeviceIntermediate.allocate(iWidth * iHeight * CHANNELS * sizeof(float));
+            }
             eData.m_eCudaExecutionContext.m_iHeight = iHeight;
             eData.m_eCudaExecutionContext.m_iWidth = iWidth;
             eData.m_eCudaExecutionContext.m_oDeviceInput.copyFromHost(pImage);

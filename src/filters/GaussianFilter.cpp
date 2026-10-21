@@ -63,8 +63,11 @@ namespace ImgProcLab
 
                 }
                 case GaussianVersion::V2:
+                {
+                    uchar* pImage = m_oInputImage.ptr<uchar>();
+                    m_eGaussianData = detail::prepareGaussian(pImage, fSigma, iKernelSize, iHeight, iWidth, Separable::TRUE);
                     break;
-                
+                }
                 case GaussianVersion::V3:
                     break;
 

@@ -5,7 +5,7 @@
 namespace ImgProcLab::detail
 {
     constexpr int CHANNELS = 3;
-    __global__ void GaussianFilterKernel(const uchar* pIn, uchar* pOut, float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
+    __global__ void GaussianFilterKernel(const uchar* pIn, uchar* pOut, const float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
     {
         int col = threadIdx.x + blockIdx.x * blockDim.x;
         int row = threadIdx.y + blockIdx.y * blockDim.y;
@@ -35,10 +35,10 @@ namespace ImgProcLab::detail
                 }
             }
 
-            int iIndex = (row*iWidth + col)*CHANNELS;
-            pOut[ iIndex + 0 ] = static_cast<uchar>(__float2int_rn(vBGR[0]));
-            pOut[ iIndex + 1 ] = static_cast<uchar>(__float2int_rn(vBGR[1]));
-            pOut[ iIndex + 2 ] = static_cast<uchar>(__float2int_rn(vBGR[2]));
+            int iImageIndex = (row*iWidth + col)*CHANNELS;
+            pOut[ iImageIndex + 0 ] = static_cast<uchar>(__float2int_rn(vBGR[0]));
+            pOut[ iImageIndex + 1 ] = static_cast<uchar>(__float2int_rn(vBGR[1]));
+            pOut[ iImageIndex + 2 ] = static_cast<uchar>(__float2int_rn(vBGR[2]));
         }
         
     }

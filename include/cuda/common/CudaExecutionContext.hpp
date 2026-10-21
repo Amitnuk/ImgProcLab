@@ -7,7 +7,8 @@ using uchar = unsigned char;
 struct CudaExecutionContext
 {
     CudaBuffer<uchar> m_oDeviceInput;
-    CudaBuffer<uchar> m_oDeviceOutputs; 
+    CudaBuffer<float> m_oDeviceIntermediate;
+    CudaBuffer<uchar> m_oDeviceOutputs;   
     CudaBuffer<float> m_oKernel;
 
     std::size_t m_iWidth;
