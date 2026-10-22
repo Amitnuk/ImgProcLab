@@ -30,9 +30,40 @@ namespace ImgProcLab {
                 GaussianFilter(const GaussianFilter&) = delete;
                 GaussianFilter& operator=(const GaussianFilter&) = delete;
 
-                virtual ~GaussianFilter() = default;
-                const detail::GaussianData& getGaussianData() const {return m_eGaussianData;}; 
-                detail::GaussianData& getGaussianData() {return m_eGaussianData;}
+                GaussianFilter(GaussianFilter&& oRhs) noexcept
+                : m_iKernelSize(oRhs.m_iKernelSize)
+                , m_eVersion(oRhs.m_eVersion)
+                , m_fSigma(oRhs.m_fSigma)
+                , m_oInputImage(std::move(oRhs.m_oInputImage))
+                , m_oOutputImage(std::move(oRhs.m_oOutputImage))
+                , m_eGaussianData(std::move(oRhs.m_eGaussianData))
+                {
+              
+                }
+
+                GaussianFilter& operator=(GaussianFilter&& oRhs) noexcept
+                {
+                  if(this == &oRhs)
+                  {
+                    return *this;
+                  }
+
+                  m_iKernelSize = oRhs.m_iKernelSize;
+                  m_eVersion = oRhs.m_eVersion;
+                  m_fSigma = oRhs.m_fSigma;
+                  m_oInputImage = std::move(oRhs.m_oInputImage);
+                  m_oOutputImage = std::move(oRhs.m_oOutputImage);
+                  m_eGaussianData =std::move(oRhs.m_eGaussianData);
+
+                  return *this;
+                  
+                }   
+          
+                ~GaussianFilter() = default;
+          
+                const detail::GaussianData& getGaussianData() const {return std::move(m_eGaussianData);}; // const lvalue can be initialized with rvalue(1)
+                detail::GaussianData&& getGaussianData() {return std::move(m_eGaussianData);} // rvalue can be initialized with rvalue(2)
+            // const detail::GaussianData& getGaussianData() {return m_eGaussianData;}; //const lvalue can be initialized with lvalue(3) 
                 const cv::Mat getImage() const {return m_oInputImage;}
             private :
                 

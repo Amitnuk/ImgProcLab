@@ -1,6 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-
+#include "common/ImgProcLabUtils.hpp"
 
 
 enum class Separable
@@ -22,8 +22,8 @@ namespace ImgProcLab
                                    const std::size_t iWidth,
                                    const Separable eCase = Separable::FALSE);
 
-      void gaussianV1(GaussianData& eData, const int iThreads = 32);
-      void gaussianV2(GaussianData& eData, const int iThreads = 32);
+      void gaussianV1(GaussianData& eData, const int iThreads = DEFAULT_THREADS);
+      void gaussianV2(GaussianData& eData, const int iThreads = DEFAULT_THREADS);
 
       void create2DGaussianKernel(float *pCoeficients,int iKernelSize, float fSigma);
       void create1DGaussianKernel(float *pCoeficients,int iKernelSize, float fSigma);

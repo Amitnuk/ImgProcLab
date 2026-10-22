@@ -1,4 +1,9 @@
+
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <memory>
 #include "AlgorithmRunner.hpp"
 #include "BenchmarkWriter.hpp"
 #include <opencv2/cudafilters.hpp> 
@@ -6,6 +11,8 @@
 #include <ImgProc/filters/GaussianFilter.hpp>
 #include <cuda/common/CudaExecution.hpp>
 #include <cuda/common/OpenCVExecution.hpp>
+#include <ImgProc/cuda/gaussian/GaussianCuda.hpp>
+#include <common/ImgProcLabUtils.hpp>
 #include "config.h"
 
 
@@ -62,7 +69,8 @@ namespace
             std::cout << "ImagePath: " << *eConfig.m_sImagePath << std::endl;
         }
         
-    };
+  };
+
 } // namespace 
 
 void AlgorithmRunner::prepare()
@@ -88,129 +96,34 @@ void AlgorithmRunner::prepare()
                                                                         *m_eConfig.m_fSigma,
                                                                         ImgProcLab::GaussianVersion::V1);
                             
-                    m_eGaussianData =  std::move(oGaussianFilter.getGaussianData());
-                    
-                    float fElapsedTime = executeCuda([&](){ ImgProcLab::detail::gaussianV1(m_eGaussianData);}, 
-                                                     m_eConfig.m_bBenchmark, 
-                                                     m_eConfig.m_iGPUWarmUps, 
-                                                     m_eConfig.m_iIterations);
+                    m_eGaussianData = oGaussianFilter.getGaussianData();
 
-                    int iHeight   = m_eGaussianData.m_eCudaExecutionContext.m_iHeight;   
-                    int iWidth    = m_eGaussianData.m_eCudaExecutionContext.m_iWidth;
-                    assert(oImage.rows == iHeight);
-                    assert(oImage.cols == iWidth);
+                    //TODO: 
+                    // oGaussianFilter..getGaussianData() performs a move so oGaussianFilter does not have it anymore, should allow copy, Array should be copiable
 
-                    cv::Mat oOutputImageCPU;
-                    cv::Mat oOutputImageCUDA;
-                    cv::Mat oOutputImage;                    
+                    bool bVisualize = true;
                     if(m_eConfig.m_bBenchmark)
                     {
-                        const std::string& sPath = GetBenchmarkDir() + "gaussianV1.csv";
-                        BenchmarResult oBenchmarResult{iWidth,iHeight,
-                            *m_eConfig.m_iKernelSize,
-                            m_eConfig.m_iGPUWarmUps,
-                            m_eConfig.m_iIterations,
-                            fElapsedTime,
-                            "gaussian",
-                            "v1"};  
-                        
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResult);
+                        benchmark(ImgProcLab::detail::gaussianV1,
+                                  oImage,
+                                  "gaussian",
+                                  "V1",
+                                  true);
+                    }
+                    else if(bVisualize)
+                    {
 
-                        float fElapsedTImeCPU = executeOpenCV([&](){cv::GaussianBlur(oImage,
-                                                                                     oOutputImageCPU, 
-                                                                                     cv::Size(*m_eConfig.m_iKernelSize,*m_eConfig.m_iKernelSize), 
-                                                                                     *m_eConfig.m_fSigma,
-                                                                                     *m_eConfig.m_fSigma,
-                                                                                     cv::BORDER_CONSTANT);}, 
-                                                                    Backend::CPU, 
-                                                                    m_eConfig.m_bBenchmark,
-                                                                    m_eConfig.m_iGPUWarmUps,
-                                                                    m_eConfig.m_iIterations);
+                      executeCuda([&](){ImgProcLab::detail::gaussianV1(m_eGaussianData, DEFAULT_THREADS);},false, 0, 0);
 
-
-
-                        BenchmarResult oBenchmarResultCPU{iWidth,
-                                                          iHeight,    
-                                                          *m_eConfig.m_iKernelSize,   
-                                                          m_eConfig.m_iGPUWarmUps,
-                                                          m_eConfig.m_iIterations,
-                                                          fElapsedTImeCPU,
-                                                          "gaussian",
-                                                          "CPU"};
-            
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResultCPU);
-
-
-                            
-                            
-                        cv::cuda::GpuMat d_input, d_output;
-                        d_input.upload(oImage);
-                        cv::cuda::Stream stream;
-                        auto oGaussian = cv::cuda::createGaussianFilter(oImage.type(), 
-                                                                        oImage.type(),
-                                                                        cv::Size(*m_eConfig.m_iKernelSize, *m_eConfig.m_iKernelSize), 
-                                                                        *m_eConfig.m_fSigma, 
-                                                                        *m_eConfig.m_fSigma,
-                                                                        cv::BORDER_CONSTANT);
-                                                                        
-                        float fElapsedTImeCUDA = executeOpenCV([&](){oGaussian->apply(d_input, d_output, stream);},
-                                                                    Backend::CUDA, 
-                                                                    m_eConfig.m_bBenchmark, 
-                                                                    m_eConfig.m_iGPUWarmUps,
-                                                                    m_eConfig.m_iIterations);
-
-                        d_output.download(oOutputImageCUDA);
-                        BenchmarResult oBenchmarResultCUDA{iWidth,
-                            iHeight,
-                            *m_eConfig.m_iKernelSize,
-                            m_eConfig.m_iGPUWarmUps, 
-                            m_eConfig.m_iIterations, 
-                            fElapsedTImeCUDA,
-                            "gaussian", 
-                            "CUDA"};
-
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResultCUDA);
-                        
-                        bool bVisualize = true;
-                        if( bVisualize )
-                        {
-                            cv::imshow("Original", oImage);
-                            cv::imshow("GaussianFilterCPU", oOutputImageCPU);
-                            cv::imshow("GaussianFilterCUDA", oOutputImageCUDA);
-
-
-                            constexpr int iChannels = 3;
-                            uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
-                                
-                            m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(pOut);
-                            oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3, pOut);
-                
-
-                            int radius = *m_eConfig.m_iKernelSize / 2;
-
-                            cv::Rect roi(
-                                radius,
-                                radius,
-                                oOutputImage.cols - 2 * radius,
-                                oOutputImage.rows - 2 * radius
-                            );
-
-                            std::cout << "OpenCV CPU vs OpenCV CUDA:" << std::endl;
-                            ::compareImage(oOutputImageCPU(roi), oOutputImageCUDA(roi));  
-
-
-                            std::cout << "ImgProcLab vs OpenCV CPU:" << std::endl;
-                            ::compareImage(oOutputImage(roi), oOutputImageCPU(roi));  
-                            
-                            std::cout << "ImgProcLab vs OpenCV CUDA:" << std::endl;
-                            ::compareImage(oOutputImage(roi), oOutputImageCUDA(roi));  
-
-
-                            cv::imshow("GaussianFilter", oOutputImage);
-                                    
-                            cv::waitKey(0);
-                            delete[] pOut;
-                        }
+                      constexpr int iChannels = 3;
+                      const auto [iWidth, iHeight] = oImage.size();
+                      cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+                      
+                      m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+                      
+                      cv::imshow("Original Image", oImage);
+                      cv::imshow("Gaussian Blurred Image", oOutputImage);
+                      cv::waitKey(0);
                     }
                     break;
                 }
@@ -220,6 +133,7 @@ void AlgorithmRunner::prepare()
                     std::cout << "Gaussian Kernel Launcher" << std::endl;
 
                     ::displayInfo(m_eConfig);
+                    
                     cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
                     ImgProcLab::Filter::GaussianFilter oGaussianFilter( oImage,
                                                                         *m_eConfig.m_iKernelSize,
@@ -228,128 +142,34 @@ void AlgorithmRunner::prepare()
                             
                     m_eGaussianData =  std::move(oGaussianFilter.getGaussianData());
                     
-                    float fElapsedTime = executeCuda([&](){ ImgProcLab::detail::gaussianV2(m_eGaussianData);}, 
-                                                     m_eConfig.m_bBenchmark, 
-                                                     m_eConfig.m_iGPUWarmUps, 
-                                                     m_eConfig.m_iIterations);
-
-                    int iHeight   = m_eGaussianData.m_eCudaExecutionContext.m_iHeight;   
-                    int iWidth    = m_eGaussianData.m_eCudaExecutionContext.m_iWidth;
-                    assert(oImage.rows == iHeight);
-                    assert(oImage.cols == iWidth);
-
-                    cv::Mat oOutputImageCPU;
-                    cv::Mat oOutputImageCUDA;
-                    cv::Mat oOutputImage;                    
+                    
+                    bool bVisualize = true;
                     if(m_eConfig.m_bBenchmark)
                     {
-                        const std::string& sPath = GetBenchmarkDir() + "gaussianV1.csv";
-                        BenchmarResult oBenchmarResult{iWidth,iHeight,
-                            *m_eConfig.m_iKernelSize,
-                            m_eConfig.m_iGPUWarmUps,
-                            m_eConfig.m_iIterations,
-                            fElapsedTime,
-                            "gaussian",
-                            "v1"};  
-                        
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResult);
-
-                        float fElapsedTImeCPU = executeOpenCV([&](){cv::GaussianBlur(oImage,
-                                                                                     oOutputImageCPU, 
-                                                                                     cv::Size(*m_eConfig.m_iKernelSize,*m_eConfig.m_iKernelSize), 
-                                                                                     *m_eConfig.m_fSigma,
-                                                                                     *m_eConfig.m_fSigma,
-                                                                                     cv::BORDER_CONSTANT);}, 
-                                                                    Backend::CPU, 
-                                                                    m_eConfig.m_bBenchmark,
-                                                                    m_eConfig.m_iGPUWarmUps,
-                                                                    m_eConfig.m_iIterations);
-
-
-
-                        BenchmarResult oBenchmarResultCPU{iWidth,
-                                                          iHeight,    
-                                                          *m_eConfig.m_iKernelSize,   
-                                                          m_eConfig.m_iGPUWarmUps,
-                                                          m_eConfig.m_iIterations,
-                                                          fElapsedTImeCPU,
-                                                          "gaussian",
-                                                          "CPU"};
-            
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResultCPU);
-
-
-                            
-                            
-                        cv::cuda::GpuMat d_input, d_output;
-                        d_input.upload(oImage);
-                        cv::cuda::Stream stream;
-                        auto oGaussian = cv::cuda::createGaussianFilter(oImage.type(), 
-                                                                        oImage.type(),
-                                                                        cv::Size(*m_eConfig.m_iKernelSize, *m_eConfig.m_iKernelSize), 
-                                                                        *m_eConfig.m_fSigma, 
-                                                                        *m_eConfig.m_fSigma,
-                                                                        cv::BORDER_CONSTANT);
-                                                                        
-                        float fElapsedTImeCUDA = executeOpenCV([&](){oGaussian->apply(d_input, d_output, stream);},
-                                                                    Backend::CUDA, 
-                                                                    m_eConfig.m_bBenchmark, 
-                                                                    m_eConfig.m_iGPUWarmUps,
-                                                                    m_eConfig.m_iIterations);
-
-                        d_output.download(oOutputImageCUDA);
-                        BenchmarResult oBenchmarResultCUDA{iWidth,
-                            iHeight,
-                            *m_eConfig.m_iKernelSize,
-                            m_eConfig.m_iGPUWarmUps, 
-                            m_eConfig.m_iIterations, 
-                            fElapsedTImeCUDA,
-                            "gaussian", 
-                            "CUDA"};
-
-                        BenchmarkWriter::writeCSV(sPath, oBenchmarResultCUDA);
-                        
-                        bool bVisualize = true;
-                        if( bVisualize )
-                        {
-                            cv::imshow("Original", oImage);
-                            cv::imshow("GaussianFilterCPU", oOutputImageCPU);
-                            cv::imshow("GaussianFilterCUDA", oOutputImageCUDA);
-
-
-                            constexpr int iChannels = 3;
-                            uchar* pOut = new uchar[iWidth*iHeight*iChannels]; 
-                                
-                            m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(pOut);
-                            oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3, pOut);
-                
-
-                            int radius = *m_eConfig.m_iKernelSize / 2;
-
-                            cv::Rect roi(
-                                radius,
-                                radius,
-                                oOutputImage.cols - 2 * radius,
-                                oOutputImage.rows - 2 * radius
-                            );
-
-                            std::cout << "OpenCV CPU vs OpenCV CUDA:" << std::endl;
-                            ::compareImage(oOutputImageCPU(roi), oOutputImageCUDA(roi));  
-
-
-                            std::cout << "ImgProcLab vs OpenCV CPU:" << std::endl;
-                            ::compareImage(oOutputImage(roi), oOutputImageCPU(roi));  
-                            
-                            std::cout << "ImgProcLab vs OpenCV CUDA:" << std::endl;
-                            ::compareImage(oOutputImage(roi), oOutputImageCUDA(roi));  
-
-
-                            cv::imshow("GaussianFilter", oOutputImage);
-                                    
-                            cv::waitKey(0);
-                            delete[] pOut;
-                        }
+                        benchmark(ImgProcLab::detail::gaussianV2,
+                                  oImage,
+                                  "gaussian",
+                                  "V2",
+                                  bVisualize);
                     }
+                    else if(bVisualize)
+                    {
+
+                      executeCuda([&](){ImgProcLab::detail::gaussianV2(m_eGaussianData, DEFAULT_THREADS);},false, 0, 0);
+                      constexpr int iChannels = 3;
+                      const auto [iWidth, iHeight] = oImage.size();
+                      uchar* pOut = new uchar[iWidth * iHeight * iChannels];
+                      
+                      m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(pOut);
+                      cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3, pOut); 
+
+                      cv::imshow("Original Image", oImage);
+                      cv::imshow("Gaussian Blurred Image", oOutputImage);
+                      cv::waitKey(0);
+
+                      
+                    }
+                    
                     break;
                 }      
                 default:
@@ -370,9 +190,132 @@ void AlgorithmRunner::prepare()
     }
 }
 
+//TODO: make this function filter/algorithms agnostic, right now only works for Gaussian Blur 
+template<typename Function>
+void AlgorithmRunner::benchmark(Function&& function,
+                                const cv::Mat& oImage,
+                                const std::string& sAlgorithm,
+                                const std::string& sVersion,
+                                bool bVisualize /*= true*/)
+{ 
 
-void AlgorithmRunner::execute()
-{
+
+  float fElapsedTime = executeCuda([&](){ function(m_eGaussianData, DEFAULT_THREADS);}, // ;
+                                     m_eConfig.m_bBenchmark, 
+                                     m_eConfig.m_iGPUWarmUps, 
+                                     m_eConfig.m_iIterations);
+
+    
+    assert(oImage.rows == m_eGaussianData.m_eCudaExecutionContext.m_iHeight);
+    assert(oImage.cols == m_eGaussianData.m_eCudaExecutionContext.m_iWidth);
+
+    auto [iWidth, iHeight] = oImage.size();
+    const std::string& sPath = GetBenchmarkDir() + sAlgorithm + sVersion;
+    BenchmarResult oBenchmarResult{iWidth,iHeight,
+                                   *m_eConfig.m_iKernelSize,
+                                   m_eConfig.m_iGPUWarmUps,
+                                   m_eConfig.m_iIterations,
+                                   fElapsedTime,
+                                   sAlgorithm,
+                                   sVersion};  
+                        
+    BenchmarkWriter::writeCSV(sPath, oBenchmarResult);
+
+    cv::Mat oOutputImageCPU;
+    float fElapsedTImeCPU = executeOpenCV([&](){cv::GaussianBlur(oImage,
+                                                                 oOutputImageCPU, 
+                                                                 cv::Size(*m_eConfig.m_iKernelSize,*m_eConfig.m_iKernelSize), 
+                                                                 *m_eConfig.m_fSigma,
+                                                                 *m_eConfig.m_fSigma,
+                                                                 cv::BORDER_CONSTANT);}, 
+                                               Backend::CPU, 
+                                               m_eConfig.m_bBenchmark,
+                                               m_eConfig.m_iGPUWarmUps,
+                                               m_eConfig.m_iIterations);
+
+
+
+    BenchmarResult oBenchmarResultCPU{iWidth,
+                                      iHeight,    
+                                      *m_eConfig.m_iKernelSize,   
+                                      m_eConfig.m_iGPUWarmUps,
+                                      m_eConfig.m_iIterations,
+                                      fElapsedTImeCPU,
+                                      sAlgorithm,
+                                      "CPU"};
+            
+    BenchmarkWriter::writeCSV(sPath, oBenchmarResultCPU);
+
+
+                            
+                            
+    cv::cuda::GpuMat d_input, d_output;
+    d_input.upload(oImage);
+    cv::cuda::Stream stream;
+    auto oGaussian = cv::cuda::createGaussianFilter(oImage.type(), 
+                                                    oImage.type(),
+                                                    cv::Size(*m_eConfig.m_iKernelSize, *m_eConfig.m_iKernelSize), 
+                                                    *m_eConfig.m_fSigma, 
+                                                    *m_eConfig.m_fSigma,
+                                                    cv::BORDER_CONSTANT);
+                                                                        
+    float fElapsedTImeCUDA = executeOpenCV([&](){oGaussian->apply(d_input, d_output, stream);},
+                                                Backend::CUDA, 
+                                                m_eConfig.m_bBenchmark, 
+                                                m_eConfig.m_iGPUWarmUps,
+                                                m_eConfig.m_iIterations);
+
+    cv::Mat oOutputImageCUDA;
+    d_output.download(oOutputImageCUDA);
+    BenchmarResult oBenchmarResultCUDA{iWidth,
+                                       iHeight,
+                                       *m_eConfig. m_iKernelSize,
+                                       m_eConfig.m_iGPUWarmUps, 
+                                       m_eConfig.m_iIterations, 
+                                       fElapsedTImeCUDA,
+                                       sAlgorithm, 
+                                       "CUDA"};
+
+    BenchmarkWriter::writeCSV(sPath, oBenchmarResultCUDA);
+                        
+    
+    if( bVisualize )
+    {
+      cv::imshow("Original", oImage);
+      cv::imshow("GaussianFilterCPU", oOutputImageCPU);
+      cv::imshow("GaussianFilterCUDA", oOutputImageCUDA);
+      
+
+      constexpr int iChannels = 3;
+
+      cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+      m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+      
+      int radius = *m_eConfig.m_iKernelSize / 2;
+      
+      cv::Rect roi(
+                   radius,
+                   radius,
+                   oOutputImage.cols - 2 * radius,
+                   oOutputImage.rows - 2 * radius
+                   );
+
+      std::cout << "OpenCV CPU vs OpenCV CUDA:" << std::endl;
+      ::compareImage(oOutputImageCPU(roi), oOutputImageCUDA(roi));  
+
+
+      std::cout << "ImgProcLab vs OpenCV CPU:" << std::endl;
+      ::compareImage(oOutputImage(roi), oOutputImageCPU(roi));  
+                            
+      std::cout << "ImgProcLab vs OpenCV CUDA:" << std::endl;
+      ::compareImage(oOutputImage(roi), oOutputImageCUDA(roi));  
+
+
+      cv::imshow("GuassianFilter", oOutputImage);
+      
+      cv::waitKey(0);
+     
+    }
 
 }
 

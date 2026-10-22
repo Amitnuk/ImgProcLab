@@ -6,3 +6,4 @@
   if( err != cudaSuccess )\
   std::cerr << "Cuda Error " << err << "in " << __FILE__ <<":"<<__LINE__ << " : " << cudaGetErrorString(err) << " ( "<< #call << " ) " << std::endl ;\
 }
+

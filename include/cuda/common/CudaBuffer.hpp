@@ -98,7 +98,7 @@ public :
   
 
   void copyFromHost(const T* pData_h);
-  void copyFromDevice(T* pData_h);
+  void copyFromDevice(T* pData_h) const;
   void allocate(std::size_t iSize) 
   {  
     if(m_iSize != 0)
@@ -142,7 +142,7 @@ void CudaBuffer<T>::copyFromHost(const T* pData_h) {
 
 
 template <typename T>
-void CudaBuffer<T>::copyFromDevice(T* pData_h) {
+void CudaBuffer<T>::copyFromDevice(T* pData_h) const {
 
   CUDA_CHECK(cudaMemcpy(pData_h, m_pData , m_iSize, cudaMemcpyDeviceToHost));
   CUDA_CHECK(cudaGetLastError());

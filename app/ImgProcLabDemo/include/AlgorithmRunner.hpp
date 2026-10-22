@@ -16,8 +16,10 @@ class AlgorithmRunner
 
     private :
         void prepare();
-        void execute();
+        template<typename Function>
+        void benchmark(Function&& function, const cv::Mat& oImage,const std::string& sAlgorithm="-",const std::string& sVersion="-",bool bVisualize = false );
         const AlgorithmConfig& m_eConfig;
         GaussianData m_eGaussianData;
+       
 
 };
