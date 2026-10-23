@@ -3,12 +3,11 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
-
-#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
+#include "ImgProc/cuda/gaussian/GaussianCuda.hpp" // 
 #include "ImgProc/filters/GaussianFilter.hpp"
-
 #define MAX_KERNEL_SIZE 15
 using uchar = unsigned char;
+
 
 namespace ImgProcLab
 {
@@ -18,10 +17,14 @@ namespace ImgProcLab
         GaussianFilter::GaussianFilter(const cv::Mat oImage,
                                        const std::size_t iKernelSize /*=3*/, 
                                        const float fSigma /*= 1.0f*/, 
-                                       const GaussianVersion eVersion /*=GaussianVersion::V1*/)
+                                       const GaussianVersion eVersion /*=GaussianVersion::V1*/,
+                                       const Separable eCase /*= Separable::FALSE*/,   
+                                       const METHOD eMethod /*= METHOD::NAIVE*/)
         : m_iKernelSize(iKernelSize)
         //, m_iChannels(3)
         , m_eVersion(eVersion)
+        , m_eCase(eCase)
+        , m_eMethod(eMethod)   
         , m_fSigma(fSigma)
         , m_oInputImage(oImage)
         {
@@ -69,8 +72,11 @@ namespace ImgProcLab
                     break;
                 }
                 case GaussianVersion::V3:
+                {
+                    uchar* pImage = m_oInputImage.ptr<uchar>();
+                    m_eGaussianData = detail::prepareGaussian(pImage, fSigma, iKernelSize, iHeight, iWidth, m_eCase, m_eMethod);
                     break;
-
+                }
                 case GaussianVersion::V4:
                     break;
 

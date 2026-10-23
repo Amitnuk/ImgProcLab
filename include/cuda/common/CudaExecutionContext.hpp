@@ -13,6 +13,6 @@ struct CudaExecutionContext
 
     std::size_t m_iWidth;
     std::size_t m_iHeight;
-
+    
     cudaStream_t m_oStream = nullptr;
 };

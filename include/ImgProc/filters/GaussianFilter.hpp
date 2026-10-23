@@ -2,10 +2,10 @@
 #include <string_view>
 #include <opencv2/opencv.hpp>
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "common/GaussianUtils.hpp"
 
 namespace ImgProcLab { 
 
-    
     enum class GaussianVersion
     {
         V1,
@@ -24,7 +24,9 @@ namespace ImgProcLab {
                 explicit GaussianFilter(const cv::Mat oImage,
                                         const std::size_t iKernelSize = 3, 
                                         const float fSigma = 1.0f, 
-                                        const  GaussianVersion oVersion=GaussianVersion::V1);
+                                        const  GaussianVersion oVersion=GaussianVersion::V1,
+                                        const Separable eCase = Separable::FALSE,
+                                        const METHOD eMethod = METHOD::NAIVE);
 
                 
                 GaussianFilter(const GaussianFilter&) = delete;
@@ -60,7 +62,9 @@ namespace ImgProcLab {
                 }   
           
                 ~GaussianFilter() = default;
-          
+                //TODO: 
+                // oGaussianFilter..getGaussianData() performs a move so oGaussianFilter does not have it anymore, should allow copy, Array should be copiable
+
                 const detail::GaussianData& getGaussianData() const {return std::move(m_eGaussianData);}; // const lvalue can be initialized with rvalue(1)
                 detail::GaussianData&& getGaussianData() {return std::move(m_eGaussianData);} // rvalue can be initialized with rvalue(2)
             // const detail::GaussianData& getGaussianData() {return m_eGaussianData;}; //const lvalue can be initialized with lvalue(3) 
@@ -70,6 +74,8 @@ namespace ImgProcLab {
                 std::size_t m_iKernelSize;
                 //std::size_t m_iChannels;
                 GaussianVersion m_eVersion;
+                Separable m_eCase;
+                METHOD m_eMethod;
                 float m_fSigma;
                 cv::Mat m_oInputImage; 
                 cv::Mat m_oOutputImage;

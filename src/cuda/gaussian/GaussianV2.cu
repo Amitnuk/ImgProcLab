@@ -2,6 +2,7 @@
 #include <opencv2/core/hal/interface.h>
 #include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "common/GaussianUtils.hpp"
 #include "cuda/common/CudaBuffer.hpp"
 #include "cuda/common/CudaUtils.hpp"
 
@@ -30,9 +31,10 @@ namespace ImgProcLab::detail
                 {
                     int iKernelIndex = x + iHalf;
                     int iImageIndex = (row*iWidth + iCol)*CHANNELS;
-                    vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * pKernel[iKernelIndex];
-                    vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * pKernel[iKernelIndex];
-                    vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * pKernel[iKernelIndex];
+                    const float& fWeights = pKernel[iKernelIndex]; 
+                    vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeights;
+                    vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeights;
+                    vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fWeights;
                   
                 }
                 
@@ -65,9 +67,10 @@ namespace ImgProcLab::detail
               {
                   int iKernelIndex = y + iHalf;
                   int iInmageIndex = (iRow*iWidth + col)*CHANNELS;
-                  vBGR[0] += pIn[iInmageIndex + 0] * pKernel[iKernelIndex];
-                  vBGR[1] += pIn[iInmageIndex + 1] * pKernel[iKernelIndex];
-                  vBGR[2] += pIn[iInmageIndex + 2] * pKernel[iKernelIndex];
+                  const float& fWeights = pKernel[iKernelIndex]; 
+                  vBGR[0] += pIn[iInmageIndex + 0] * fWeights;
+                  vBGR[1] += pIn[iInmageIndex + 1] * fWeights;
+                  vBGR[2] += pIn[iInmageIndex + 2] * fWeights;
               }
               
           }
@@ -77,13 +80,11 @@ namespace ImgProcLab::detail
           pOut[iImageIndex + 0] = static_cast<uchar>(__float2int_rn(vBGR[0]));
           pOut[iImageIndex + 1] = static_cast<uchar>(__float2int_rn(vBGR[1]));
           pOut[iImageIndex + 2] = static_cast<uchar>(__float2int_rn(vBGR[2]));
-          
-
       }
       
   }
 
-  void gaussianV2(GaussianData& eData, const int iThreads/*=32*/)
+  void gaussianV2(GaussianData& eData, const int iThreads/*=32*/, Separable )
   {
 
     CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;

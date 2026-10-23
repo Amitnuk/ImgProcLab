@@ -2,8 +2,14 @@
 #include "ArgumentParser.hpp"
 #include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "common/GaussianUtils.hpp"
 
 using namespace ImgProcLab::detail;
+
+namespace cv 
+{
+  class Mat;
+}
 
 class AlgorithmRunner
 {
@@ -17,7 +23,13 @@ class AlgorithmRunner
     private :
         void prepare();
         template<typename Function>
-        void benchmark(Function&& function, const cv::Mat& oImage,const std::string& sAlgorithm="-",const std::string& sVersion="-",bool bVisualize = false );
+        void benchmark(Function&& function, 
+                       const cv::Mat& oImage,
+                       const std::string& sAlgorithm="-",
+                       const std::string& sVersion="-",
+                       bool bVisualize = false,
+                       Separable eCase = Separable::FALSE);
+
         const AlgorithmConfig& m_eConfig;
         GaussianData m_eGaussianData;
        

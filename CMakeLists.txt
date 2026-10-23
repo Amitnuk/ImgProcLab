@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-
+set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
 project(ImgProcLab 
         VERSION 0.0.1 
         DESCRIPTION "Image Processing Lab"  
@@ -34,23 +34,29 @@ find_package(CUDAToolkit REQUIRED)
 add_library(ImgProcLab STATIC
            
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/GaussianFilter.cpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/GaussianFilter.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/GaussianFilter.hpp
 
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV1.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV2.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV3.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianPrepare.cu
 
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianCuda.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianData.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianCuda.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianData.hpp
 
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaUtils.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaBuffer.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecution.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecutionContext.hpp
-			  ${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/OpenCVExecution.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaUtils.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaBuffer.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecution.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaExecutionContext.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/OpenCVExecution.hpp
+
+              #${CMAKE_CURRENT_SOURCE_DIR}/include/common/ImgProcLabUtils.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/common/GaussianUtils.hpp
+
 			  )
 
-			  
+# to allow nvcc see a variable create in translation(.cu)  unit in some other translation unit(.cu) 
+set_target_properties(ImgProcLab PROPERTIES CUDA_SEPARABLE_COMPILATION ON)			  
 target_include_directories(ImgProcLab PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ImgProcLab PUBLIC ${OpenCV_LIBS} CUDA::cudart)
 

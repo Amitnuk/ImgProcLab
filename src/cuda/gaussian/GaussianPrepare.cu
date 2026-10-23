@@ -2,6 +2,9 @@
 #include <stdexcept>
 #include "ImgProc/cuda/gaussian/GaussianData.hpp"
 #include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
+#include "common/ImgProcLabUtils.hpp"
+#include "cuda/common/CudaUtils.hpp"
+#include "math/Array3D.hpp"
 #include <cmath>
 
 
@@ -9,7 +12,7 @@ namespace ImgProcLab::detail
 {
     
     constexpr int CHANNELS = 3;
-
+    extern __constant__ float GFILTER[MAX_KERNEL_SIZE*MAX_KERNEL_SIZE]={};
     void create2DGaussianKernel(float *pCoeficients, int iKernelSize, float fSigma)
     {   
         
@@ -69,7 +72,8 @@ namespace ImgProcLab::detail
                                const std::size_t iKernelSize ,
                                const std::size_t iHeight,
                                const std::size_t iWidth,
-                               const Separable eCase /*= Separable::FALSE*/)
+                               const Separable eCase /*= Separable::FALSE*/,
+                               const METHOD eVersion /*= Version::NAIVE*/)
     {
 
 
@@ -120,12 +124,24 @@ namespace ImgProcLab::detail
             eData.m_eCudaExecutionContext.m_oDeviceInput.copyFromHost(pImage);
            
             eData.m_eCudaExecutionContext.m_oKernel.allocate(iKernelSizeInBytes);
-            float* value = eData.m_aCoeficients.data();
-            eData.m_eCudaExecutionContext.m_oKernel.copyFromHost(value);
+            
+            if(eVersion == METHOD::CONSTANT) 
+            {
+              CUDA_CHECK(cudaMemcpyToSymbol(GFILTER,  eData.m_aCoeficients.data(), iKernelSizeInBytes));
+              //float values[MAX_KERNEL_SIZE * MAX_KERNEL_SIZE] = {};
+              //cudaMemcpyFromSymbol(values,GFILTER,iKernelSizeInBytes);
+              //std::printf("Host coefficient: %f\n", eData.m_aCoeficients.data()[0]);
+              //std::printf("Device coefficient: %f\n", values[0]);
+            }
+            else
+            {
+              //float* value = eData.m_aCoeficients.data();
+              eData.m_eCudaExecutionContext.m_oKernel.copyFromHost(eData.m_aCoeficients.data());
+            }
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << std::endl;
+            std::fprintf(stderr, "Cuda error %s\n: ", e.what());
             throw std::invalid_argument("Failed to to prepare Gaussian");
         }
         
