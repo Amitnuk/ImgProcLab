@@ -41,6 +41,7 @@ struct AlgorithmConfig
   int m_iIterations = 100;
   int m_iGPUWarmUps = 10;
   bool m_bBenchmark = false;
+  bool m_bVisualize = false;
   std::optional<int> m_iHeight;
   std::optional<int> m_iWidth;    
   std::optional<int> m_iKernelSize;

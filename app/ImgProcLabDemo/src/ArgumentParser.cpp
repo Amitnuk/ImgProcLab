@@ -221,12 +221,14 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     std::optional<int> oHeight;
     std::optional<int> oIterations;
     std::optional<int> oWarmUps;
+    
     int iIterations = 100;
     int iGPUWarmUps = 10;
     bool bBenchmark = false;
     bool bIsIterationProvided = false;
     bool bIsWarmupProvided = false;
-    
+    bool bVisualize = false;
+
     for(int i = 1; i < argc; i++)
     {
         std::string_view sArgument = argv[i];
@@ -324,7 +326,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
         }
         else if(sArgument == "--iterations")
         {
-            if (bIsIterationProvided)
+            if(bIsIterationProvided)
             {
                 throw std::invalid_argument("Duplicate argument : --iterations");
             }
@@ -341,7 +343,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
         }
         else if(sArgument == "--warmups")
         {
-            if (bIsWarmupProvided)
+            if(bIsWarmupProvided)
             {
                 throw std::invalid_argument("Duplicate argument : --warmups");
             }
@@ -355,7 +357,15 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
             iGPUWarmUps = *oWarmUps;
             bIsWarmupProvided = true;
         }
-        
+        else if(sArgument == "--visualize")
+        {
+          if( bVisualize )
+          {
+                throw std::invalid_argument("Duplicate argument : --visualize");
+          }
+          bVisualize = true;
+
+        }
         else
         {
             throw std::invalid_argument("Unknown argument: "  + std::string(sArgument));
@@ -403,7 +413,7 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     }
     
     
-    m_oConfig = AlgorithmConfig{ iIterations, iGPUWarmUps, bBenchmark, oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
+    m_oConfig = AlgorithmConfig{ iIterations, iGPUWarmUps, bBenchmark, bVisualize, oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
     
     validateConfig(m_oConfig);        
 
@@ -424,7 +434,8 @@ void Parser::printUsage(const char* executable)
                << " --kernel-size <odd_integer>"
                << " --sigma <float>"
                << " --height <int>"
-               << " --width <int>\n\n"
+               << " --width <int>"
+               << " --visualize\n\n"
 
                << "Available algorithms:\n"
                << "  box, gaussian, histogram, median, sobel\n\n"

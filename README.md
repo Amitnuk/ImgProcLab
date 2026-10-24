@@ -43,12 +43,14 @@ The application is currently available on the **`Dev` branch**.
 ### Gaussian Filter — V1
 
 ```bash
-./ImgProcLabDemo \
-    --image /path/to/image.png \
+./bin/Linux/64/Release/ImgProcLabDemo \
+    --image resources/parrot.png \
     --kernel-size 7 \
     --version v1 \
     --algo gaussian \
-    --sigma 1.5
+    --sigma 1.5 \
+    --benchmark \
+    --visualize \
 ```
 
 ### Arguments
@@ -62,6 +64,91 @@ The application is currently available on the **`Dev` branch**.
 | `--sigma` | Gaussian standard deviation |
 
 Additional algorithms and CUDA implementations are planned and will be integrated progressively.
+
+
+## Implemented Algorithms
+
+| Algorithm | Version | Implementation | Status |
+|-----------|---------|----------------|--------|
+| Gaussian Filter | V1 | Naive 2D convolution | Implemented |
+| Gaussian Filter | V2 | Separable convolution | Implemented |
+| Gaussian Filter | V3 | Separable convolution with constant memory | Implemented |
+| Gaussian Filter | V4 | Separable convolution with constant and shared memory | Not implemented yet |
+| Median Filter | — | Naive 2D neighborhood filtering | Implemented (not refactored yet) |
+| Average Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
+| Sobel Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
+| Grayscale Conversion | — | RGB to grayscale conversion | Implemented (not refactored yet) |
+| Binary Thresholding | — | Pixel-wise thresholding | Implemented (not refactored yet) |
+
+### Gaussian Filter — Implementation Configuration
+
+Gaussian V3 and the planned V4 allow different convolution and memory-access strategies to be selected directly in the source code.
+
+The configuration is defined through the `GaussianFilter` constructor in `AlgorithmRunner.cpp`.
+
+**Convolution strategy:**
+
+- `Separable::TRUE` — Separable convolution using two 1D passes.
+- `Separable::FALSE` — Naive 2D convolution using a single 2D pass.
+
+**Memory strategy:**
+
+- `METHOD::CONSTANT` — Gaussian coefficients stored in CUDA constant memory.
+- `METHOD::NAIVE` — Gaussian coefficients accessed without constant memory.
+
+**Default V3 configuration:**
+
+```cpp
+ImgProcLab::GaussianVersion::V3,
+Separable::TRUE,
+METHOD::CONSTANT
+```
+
+To switch between implementations, simply change the corresponding enum values in the `GaussianFilter` constructor.
+
+For example, to use naive 2D convolution without constant memory:
+
+```cpp
+ImgProcLab::GaussianVersion::V3,
+Separable::FALSE,
+METHOD::NAIVE
+```
+
+These options allow different convolution and memory-access strategies to be explored and benchmarked without changing the underlying CUDA kernels.
+
+### Benchmark Configuration
+
+By default, the automated benchmarking script (`run.sh`) executes the **optimized configuration of each implemented Gaussian version**:
+
+- **V1:** Naive 2D convolution.
+- **V2:** Separable convolution.
+- **V3:** Separable convolution with constant memory.
+- **V4 (planned):** Separable convolution with constant and shared memory.
+
+Alternative configurations can be benchmarked by modifying the corresponding enum values in `AlgorithmRunner.cpp` and rebuilding the project.
+
+**Note:** V4 is not yet implemented. Configuration changes currently require modifying the source code and rebuilding the application.
+
+Additional CUDA optimizations and refactoring of existing implementations are planned.
+
+
+## Benchmarking
+
+ImgProcLab includes an automated benchmarking script for comparing CUDA implementations against OpenCV CPU and CUDA.
+
+### Running the Benchmarks
+
+From the repository root:
+
+```bash
+./run.sh
+```
+
+The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, and V3 using kernel sizes from 3×3 to 31×31.
+
+Each configuration runs 10 warmup iterations and 100 measured iterations, with a Gaussian sigma of 2.0.
+
+**Note:** Update the `IMAGES` array in `run.sh` to reference other images available on your system.
 
 ## Development Status
 

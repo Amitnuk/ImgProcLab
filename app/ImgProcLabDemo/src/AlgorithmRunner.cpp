@@ -1,3 +1,4 @@
+#include <ios>
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/highgui.hpp>
@@ -14,6 +15,7 @@
 #include <common/ImgProcLabUtils.hpp>
 #include "common/GaussianUtils.hpp"
 #include "config.h"
+
 
 
 namespace 
@@ -76,8 +78,9 @@ namespace
 void AlgorithmRunner::prepare()
 {
 
+    bool bVisualize = m_eConfig.m_bVisualize;
+    std::cout<<"fo :" << std::boolalpha << bVisualize << std::endl;
     
-
     switch(*m_eConfig.m_eAlgorithmType)
     {
         case Algorithm::GaussianFilter:
@@ -101,14 +104,14 @@ void AlgorithmRunner::prepare()
                     //TODO: 
                     // oGaussianFilter..getGaussianData() performs a move so oGaussianFilter does not have it anymore, should allow copy, Array should be copiable
 
-                    bool bVisualize = true;
+                    
                     if(m_eConfig.m_bBenchmark)
                     {
                         benchmark(ImgProcLab::detail::gaussianV1,
                                   oImage,
                                   "gaussian",
                                   "V1",
-                                  true);
+                                  bVisualize);
                     }
                     else if(bVisualize)
                     {
@@ -141,7 +144,7 @@ void AlgorithmRunner::prepare()
                     m_eGaussianData =  std::move(oGaussianFilter.getGaussianData());
                     
                     
-                    bool bVisualize = true;                   
+                                      
                     if(m_eConfig.m_bBenchmark)
                     {
                         benchmark(ImgProcLab::detail::gaussianV2,
@@ -178,18 +181,17 @@ void AlgorithmRunner::prepare()
                     ::displayInfo(m_eConfig);
                     
                     cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-                    Separable eCase = Separable::TRUE;
+                   
                     ImgProcLab::Filter::GaussianFilter oGaussianFilter( oImage, // 
                                                                         *m_eConfig.m_iKernelSize,
                                                                         *m_eConfig.m_fSigma,
                                                                         ImgProcLab::GaussianVersion::V3,
-                                                                        eCase,
+                                                                        Separable::TRUE,
                                                                         METHOD::CONSTANT);
                             
                     m_eGaussianData =  std::move(oGaussianFilter.getGaussianData());
                     
                     
-                    bool bVisualize = true;
                     if(m_eConfig.m_bBenchmark)
                     {
                         benchmark(ImgProcLab::detail::gaussianV3,
@@ -197,12 +199,12 @@ void AlgorithmRunner::prepare()
                                   "gaussian",
                                   "V3",
                                   bVisualize, 
-                                  eCase);
+                                  Separable::TRUE);
                     }
                     else if(bVisualize)
                     {
 
-                      executeCuda([&](){ImgProcLab::detail::gaussianV3(m_eGaussianData, DEFAULT_THREADS, eCase);},false, 0, 0);
+                      executeCuda([&](){ImgProcLab::detail::gaussianV3(m_eGaussianData, DEFAULT_THREADS, Separable::TRUE);},false, 0, 0);
                       const auto [iWidth, iHeight] = oImage.size();
                       
                       cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3); 
@@ -256,7 +258,7 @@ void AlgorithmRunner::benchmark(Function&& function,
     assert(oImage.cols == static_cast<int>(m_eGaussianData.m_eCudaExecutionContext.m_iWidth));
 
     auto [iWidth, iHeight] = oImage.size();
-    const std::string& sPath = GetBenchmarkDir() + sAlgorithm + sVersion;
+    const std::string& sPath = GetBenchmarkDir() + sAlgorithm + sVersion + ".csv";
     BenchmarResult oBenchmarResult{iWidth,iHeight,
                                    *m_eConfig.m_iKernelSize,
                                    m_eConfig.m_iGPUWarmUps,
@@ -332,18 +334,18 @@ void AlgorithmRunner::benchmark(Function&& function,
       cv::imshow("GaussianFilterCUDA", oOutputImageCUDA);
       
 
-      [[maybe_unused]]constexpr int iChannels = 3;
+      [[maybe_unused]]constexpr int jChannels = 3;
 
       cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
       m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
       
-      int radius = *m_eConfig.m_iKernelSize / 2;
+      int iRadius = *m_eConfig.m_iKernelSize / 2;
       
       cv::Rect roi(
-                   radius,
-                   radius,
-                   oOutputImage.cols - 2 * radius,
-                   oOutputImage.rows - 2 * radius
+                   iRadius,
+                   iRadius,
+                   oOutputImage.cols - 2 * iRadius,
+                   oOutputImage.rows - 2 * iRadius
                    );
 
       std::cout << "OpenCV CPU vs OpenCV CUDA:" << std::endl;
