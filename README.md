@@ -38,7 +38,7 @@ The project also serves as a platform for experimenting with CUDA optimization t
 - GNU/Linux
 ## Usage
 
-The application is currently available on the **`Dev` branch**.
+The application is often more advanced on the **`Dev` branch** than ** `main` branch**.
 
 ### Gaussian Filter — V1
 
