@@ -17,7 +17,6 @@
 #include "config.h"
 
 
-
 namespace 
 {
     void compareImage(const cv::Mat& oAtual, const cv::Mat& oReference)

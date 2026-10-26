@@ -35,7 +35,7 @@ The project also serves as a platform for experimenting with CUDA optimization t
 - OpenCV 4 (for image loading and reference implementations)
 - CMake 3.18 or later
 - C++17-compatible compiler
-
+- GNU/Linux
 ## Usage
 
 The application is currently available on the **`Dev` branch**.
