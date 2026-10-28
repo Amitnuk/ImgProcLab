@@ -115,7 +115,7 @@ void AlgorithmRunner::prepare()
                     else if(bVisualize)
                     {
 
-                      executeCuda([&](){ImgProcLab::detail::gaussianV1(m_eGaussianData, DEFAULT_THREADS);},false, 0, 0);
+                      executeCuda([&](){ImgProcLab::detail::gaussianV1(m_eGaussianData, CONSTANTS::DEFAULT_THREADS);},false, 0, 0);
 
                       const auto [iWidth, iHeight] = oImage.size();
                       cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3); 
@@ -155,7 +155,7 @@ void AlgorithmRunner::prepare()
                     else if(bVisualize)
                     {
 
-                      executeCuda([&](){ImgProcLab::detail::gaussianV2(m_eGaussianData, DEFAULT_THREADS);},false, 0, 0);
+                      executeCuda([&](){ImgProcLab::detail::gaussianV2(m_eGaussianData, CONSTANTS::DEFAULT_THREADS);},false, 0, 0);
                       
                       const auto [iWidth, iHeight] = oImage.size();
                       cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3); 
@@ -203,7 +203,7 @@ void AlgorithmRunner::prepare()
                     else if(bVisualize)
                     {
 
-                      executeCuda([&](){ImgProcLab::detail::gaussianV3(m_eGaussianData, DEFAULT_THREADS, Separable::TRUE);},false, 0, 0);
+                      executeCuda([&](){ImgProcLab::detail::gaussianV3(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, Separable::TRUE);},false, 0, 0);
                       const auto [iWidth, iHeight] = oImage.size();
                       
                       cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3); 
@@ -247,7 +247,7 @@ void AlgorithmRunner::benchmark(Function&& function,
 { 
 
 
-  float fElapsedTime = executeCuda([&](){ function(m_eGaussianData, DEFAULT_THREADS, eCase);}, // ;
+  float fElapsedTime = executeCuda([&](){ function(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, eCase);}, // ;
                                      m_eConfig.m_bBenchmark, 
                                      m_eConfig.m_iGPUWarmUps, 
                                      m_eConfig.m_iIterations);

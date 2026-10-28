@@ -21,6 +21,7 @@ namespace ImgProcLab {
         class GaussianFilter 
         {   
             public :
+                //TODO: Optimize GaussianFilter Constructor
                 explicit GaussianFilter(const cv::Mat oImage,
                                         const std::size_t iKernelSize = 3, 
                                         const float fSigma = 1.0f, 
@@ -82,7 +83,6 @@ namespace ImgProcLab {
                 detail::GaussianData m_eGaussianData;
         };
     }
-
     
 }
 

@@ -5,7 +5,6 @@
 #include <opencv2/core/cuda.hpp>
 #include "ImgProc/cuda/gaussian/GaussianCuda.hpp" // 
 #include "ImgProc/filters/GaussianFilter.hpp"
-#define MAX_KERNEL_SIZE 15
 using uchar = unsigned char;
 
 

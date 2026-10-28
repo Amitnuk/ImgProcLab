@@ -9,7 +9,7 @@ namespace ImgProcLab
 {
   namespace detail
   {
-    extern __constant__ float GFILTER[MAX_KERNEL_SIZE * MAX_KERNEL_SIZE];
+    extern __constant__ float GFILTER[CONSTANTS::MAX_KERNEL_SIZE * CONSTANTS::MAX_KERNEL_SIZE];
     constexpr int CHANNELS = 3;
     __global__ void GaussianFilterKernel(const uchar* pIn, uchar* pOut,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
     {
@@ -118,7 +118,7 @@ namespace ImgProcLab
 
     }
 
-    void gaussianV3(GaussianData& eData, const int iThreads /*=DEFAULT_THREADS*/, const Separable eCase /*= Separable::FALSE*/)
+    void gaussianV3(GaussianData& eData, const int iThreads /*=CONSTANTS::DEFAULT_THREADS*/, const Separable eCase /*= Separable::FALSE*/)
     {
 
         CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;

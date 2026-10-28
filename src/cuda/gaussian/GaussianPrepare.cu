@@ -12,7 +12,7 @@ namespace ImgProcLab::detail
 {
     
     constexpr int CHANNELS = 3;
-    extern __constant__ float GFILTER[MAX_KERNEL_SIZE*MAX_KERNEL_SIZE]={};
+    extern __constant__ float GFILTER[CONSTANTS::MAX_KERNEL_SIZE*CONSTANTS::MAX_KERNEL_SIZE]={};
     void create2DGaussianKernel(float *pCoeficients, int iKernelSize, float fSigma)
     {   
         

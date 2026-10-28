@@ -1,5 +1,8 @@
 #pragma once 
 #include <cstdio>
+
+
+//TODO: create a inline function instead
 #define CUDA_CHECK( call )\
 {\
   cudaError_t err = call;\
