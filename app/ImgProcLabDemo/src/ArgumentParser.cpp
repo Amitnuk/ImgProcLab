@@ -413,7 +413,17 @@ const AlgorithmConfig& Parser::parseArguments(int argc, char* argv[])
     }
     
     
-    m_oConfig = AlgorithmConfig{ iIterations, iGPUWarmUps, bBenchmark, bVisualize, oHeight, oWidth, oKernelSize, oSigma, oImagePath, oAlgorithm, oVersion};
+    m_oConfig = AlgorithmConfig{ oImagePath, 
+                                 oAlgorithm, 
+                                 oVersion,
+                                 oSigma,
+                                 oHeight, 
+                                 oWidth, 
+                                 oKernelSize,
+                                 iIterations, 
+                                 iGPUWarmUps, 
+                                 bBenchmark, 
+                                 bVisualize};
     
     validateConfig(m_oConfig);        
 
