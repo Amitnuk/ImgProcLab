@@ -11,5 +11,6 @@ enum class METHOD
 {
     NAIVE,
     CONSTANT,
+    SHARED,
     SHARED_CONSTANT,
 };

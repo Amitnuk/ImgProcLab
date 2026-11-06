@@ -13,7 +13,7 @@ namespace ImgProcLab::detail
 {
 
   constexpr int CHANNELS = 3;
-  __global__ void GaussianFilterKernelHorizontal(const uchar* pIn, float* pOut, const float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
+  __global__ void GaussianFilterKernelHorizontalV2(const uchar* pIn, float* pOut, const float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
   {
         int col = threadIdx.x + blockIdx.x * blockDim.x;
         int row = threadIdx.y + blockIdx.y * blockDim.y;
@@ -49,7 +49,7 @@ namespace ImgProcLab::detail
         }
   }
 
-  __global__ void GaussianFilterKernelVertical(const float* pIn, uchar* pOut, const float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
+  __global__ void GaussianFilterKernelVerticalV2(const float* pIn, uchar* pOut, const float* pKernel,  int iHeight, int iWidth, const std::size_t iKernelSize = 3 )
   {
       int col = threadIdx.x + blockIdx.x * blockDim.x ;
       int row = threadIdx.y + blockIdx.y * blockDim.y ;
@@ -100,7 +100,7 @@ namespace ImgProcLab::detail
 
 
    
-    GaussianFilterKernelHorizontal<<<oGridDim,oBlockDim>>>(eCudaContext.m_oDeviceInput.Data(),
+    GaussianFilterKernelHorizontalV2<<<oGridDim,oBlockDim>>>(eCudaContext.m_oDeviceInput.Data(),
                                                            eCudaContext.m_oDeviceIntermediate.Data(),
                                                            eCudaContext.m_oKernel.Data(),
                                                            iHeight,
@@ -108,7 +108,7 @@ namespace ImgProcLab::detail
                                                            eData.m_iKernelSize);
 
     
-    GaussianFilterKernelVertical<<<oGridDim,oBlockDim>>>(eCudaContext.m_oDeviceIntermediate.Data(),
+    GaussianFilterKernelVerticalV2<<<oGridDim,oBlockDim>>>(eCudaContext.m_oDeviceIntermediate.Data(),
                                                          eCudaContext.m_oDeviceOutputs.Data(),
                                                          eCudaContext.m_oKernel.Data(),
                                                          iHeight,

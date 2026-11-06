@@ -28,10 +28,11 @@ namespace ImgProcLab
                           {
                             int iImageIndex  = (iRow*iWidth + iCol)*CHANNELS;
                             int iKernelIndex = (y + half)*iKernelSize + (x + half);
-
-                            vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * pKernel[iKernelIndex];
-                            vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * pKernel[iKernelIndex];
-                            vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * pKernel[iKernelIndex];
+                            
+                            const float& fKernel = pKernel[iKernelIndex];
+                            vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fKernel ;
+                            vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fKernel ;
+                            vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fKernel ;
 
                           }
                     

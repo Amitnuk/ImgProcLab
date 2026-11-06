@@ -39,6 +39,7 @@ add_library(ImgProcLab STATIC
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV1.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV2.cu
               ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV3.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV4.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianPrepare.cu
 
 			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianCuda.hpp
