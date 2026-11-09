@@ -31,8 +31,7 @@ The project also serves as a platform for experimenting with CUDA optimization t
 ## Requirements
 
 - NVIDIA GPU with CUDA support
-- Cuda-13.4
-- CUDA Toolkit
+- CUDA Toolkit 13.4
 - OpenCV 4 (for image loading and reference implementations)
 - CMake 3.18 or later
 - C++17-compatible compiler
@@ -63,6 +62,8 @@ The application is often more advanced on the **`Dev` branch** than **`main` bra
 | `--version` | CUDA implementation version |
 | `--kernel-size` | Kernel size (positive odd integer) |
 | `--sigma` | Gaussian standard deviation |
+| `--benchmark` | Benchmark mode |
+| `--visualize` | Visualization mode |
 
 Additional algorithms and CUDA implementations are planned and will be integrated progressively.
 
@@ -75,6 +76,7 @@ Additional algorithms and CUDA implementations are planned and will be integrate
 | Gaussian Filter | V2 | Separable convolution | Implemented |
 | Gaussian Filter | V3 | Separable convolution with constant memory | Implemented |
 | Gaussian Filter | V4 | Separable convolution with shared memory | Implemented |
+| Gaussian Filter | V5 | Separable convolution with constant memory and shared memory | Not implemented yet |
 | Median Filter | — | Naive 2D neighborhood filtering | Implemented (not refactored yet) |
 | Average Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
 | Sobel Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
@@ -125,7 +127,7 @@ By default, the automated benchmarking script (`run.sh`) executes the **optimize
 - **V2:** Separable convolution.
 - **V3:** Separable convolution with constant memory.
 - **V4:** Separable convolution with shared memory.
-- **V4(on going):** Separable convolution with constant and shared memory.
+- **V5(on going):** Separable convolution with constant and shared memory.
 
 Alternative configurations can be benchmarked by modifying the corresponding enum values in `AlgorithmRunner.cpp` and rebuilding the project.
 
@@ -185,10 +187,9 @@ This O(n²) behavior can be observed in the graphs, where the trend becomes more
 
 Bellow the graph comparing, the execution time and average computation time.
 
-</table> 
 
  **Average Execution Time per Image (ms)**
-
+<table> 
 | Image Size | CPU (ms) | CUDA (ms) | V1 (ms) |
 |------------|----------|-----------|---------|
 | 453×340    | 0.262416 | 0.020690  | 0.154490 |
@@ -196,15 +197,15 @@ Bellow the graph comparing, the execution time and average computation time.
 | 597×335    | 0.325389 | 0.024617  | 0.192899 |
 | 540×720    | 0.492039 | 0.042909  | 0.342717 |
 | 1920×1080  | 1.708543 | 0.184896  | 1.587830 |
-
+</table> 
  **Overall Average Execution Time (ms)**
-
+<table> 
 | Implementation | Average Time (ms) |
 |----------------|-------------------|
 | CPU            | 0.642491          |
 | CUDA           | 0.061253          |
 | V1             | 0.506700          |
-
+</table> 
 
 The results obtained show that V1 is approximately 1.27× faster on average than OpenCV's CPU 
 Gaussian filter implementation, but 8.27× slower on average than its CUDA implementation. 
