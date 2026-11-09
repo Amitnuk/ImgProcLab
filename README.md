@@ -38,7 +38,7 @@ The project also serves as a platform for experimenting with CUDA optimization t
 - GNU/Linux
 ## Usage
 
-The application is often more advanced on the **`Dev` branch** than **`main` branch**.
+The application is often more advanced on the **`Dev` branch** than the **`main` branch**.
 
 ### Gaussian Filter — V1
 
@@ -85,7 +85,7 @@ Additional algorithms and CUDA implementations are planned and will be integrate
 
 ### Gaussian Filter — Implementation Configuration
 
-Gaussian V3 and the planned V4 allow different convolution and memory-access strategies to be selected directly in the source code.
+Gaussian V3, V4 and the planned V5 allow different convolution and memory-access strategies to be selected directly in the source code.
 
 The configuration is defined through the `GaussianFilter` constructor in `AlgorithmRunner.cpp`.
 
@@ -127,11 +127,11 @@ By default, the automated benchmarking script (`run.sh`) executes the **optimize
 - **V2:** Separable convolution.
 - **V3:** Separable convolution with constant memory.
 - **V4:** Separable convolution with shared memory.
-- **V5(on going):** Separable convolution with constant and shared memory.
+- **V5(ongoing):** Separable convolution with constant and shared memory.
 
 Alternative configurations can be benchmarked by modifying the corresponding enum values in `AlgorithmRunner.cpp` and rebuilding the project.
 
-**Note:** V4 is not yet implemented. Configuration changes currently require modifying the source code and rebuilding the application.
+**Note:** V5 is not yet implemented. Configuration changes currently require modifying the source code and rebuilding the application.
 
 Additional CUDA optimizations and refactoring of existing implementations are planned.
 
@@ -148,9 +148,9 @@ From the repository root:
 ./run.sh
 ```
 
-The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, and V3 using kernel sizes from 3×3 to 31×31.
+The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, V3, and V4 using kernel sizes from 3×3 to 31×31.
 
-Each configuration runs 10 warmup iterations and 100 measured iterations, with a Gaussian sigma of 2.0.
+Each configuration runs 10 warmup iterations and 100 measured iterations, with a Gaussian sigma of 1.5.
 
 **Note:** Update the `IMAGES` array in `run.sh` to reference other images available on your system.
 
@@ -179,7 +179,7 @@ The images used can be found in the `resources` directory.
 
 
 
-The images above show the results obtained using a Gaussian filter on six images of different sizes, with 15 different kernel sizes and a sigma value of 1.5.
+The images above show the results obtained using a Gaussian filter on five images of different sizes, with 15 different kernel sizes and a sigma value of 1.5.
 
 The approach used is a non-optimized (naive) implementation. The filtering operation, i.e., smoothing, is applied in both image dimensions within the same nested loop, resulting in an algorithm with O(n²) complexity.
 
@@ -187,9 +187,9 @@ This O(n²) behavior can be observed in the graphs, where the trend becomes more
 
 Bellow the graph comparing, the execution time and average computation time.
 
-
+</table> 
  **Average Execution Time per Image (ms)**
-<table> 
+
 | Image Size | CPU (ms) | CUDA (ms) | V1 (ms) |
 |------------|----------|-----------|---------|
 | 453×340    | 0.262416 | 0.020690  | 0.154490 |
@@ -197,15 +197,15 @@ Bellow the graph comparing, the execution time and average computation time.
 | 597×335    | 0.325389 | 0.024617  | 0.192899 |
 | 540×720    | 0.492039 | 0.042909  | 0.342717 |
 | 1920×1080  | 1.708543 | 0.184896  | 1.587830 |
-</table> 
+
  **Overall Average Execution Time (ms)**
-<table> 
+
 | Implementation | Average Time (ms) |
 |----------------|-------------------|
 | CPU            | 0.642491          |
 | CUDA           | 0.061253          |
 | V1             | 0.506700          |
-</table> 
+
 
 The results obtained show that V1 is approximately 1.27× faster on average than OpenCV's CPU 
 Gaussian filter implementation, but 8.27× slower on average than its CUDA implementation. 
