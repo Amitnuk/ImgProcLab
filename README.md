@@ -124,7 +124,8 @@ By default, the automated benchmarking script (`run.sh`) executes the **optimize
 - **V1:** Naive 2D convolution.
 - **V2:** Separable convolution.
 - **V3:** Separable convolution with constant memory.
-- **V4 (planned):** Separable convolution with constant and shared memory.
+- **V4:** Separable convolution with shared memory.
+- **V4(on going):** Separable convolution with constant and shared memory.
 
 Alternative configurations can be benchmarked by modifying the corresponding enum values in `AlgorithmRunner.cpp` and rebuilding the project.
 
@@ -186,7 +187,7 @@ Bellow the graph comparing, the execution time and average computation time.
 
 </table> 
 
-* Average Execution Time per Image (ms)
+ **Average Execution Time per Image (ms)**
 
 | Image Size | CPU (ms) | CUDA (ms) | V1 (ms) |
 |------------|----------|-----------|---------|
@@ -196,7 +197,7 @@ Bellow the graph comparing, the execution time and average computation time.
 | 540×720    | 0.492039 | 0.042909  | 0.342717 |
 | 1920×1080  | 1.708543 | 0.184896  | 1.587830 |
 
-* Overall Average Execution Time (ms)
+ **Overall Average Execution Time (ms)**
 
 | Implementation | Average Time (ms) |
 |----------------|-------------------|
