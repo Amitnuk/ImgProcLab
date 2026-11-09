@@ -157,12 +157,12 @@ Each configuration runs 10 warmup iterations and 100 measured iterations, with a
 ### Gaussian V1: Naive Approach 
 <table>
   <tr>
-    <td><img src="test/plots/V1.0" width="400"></td>
-    <td><img src="test/plots/V1.1" width="400"></td>
-    <td><img src="test/plots/V1.2" width="400"></td>
-    <td><img src="test/plots/V1.3" width="400"></td>
-    <td><img src="test/plots/V1.4" width="400"></td>
-    <td><img src="test/plots/V1.0" width="400"></td>
+    <td><img src="test/plots/V1.0.png" width="400"></td>
+    <td><img src="test/plots/V1.1.png" width="400"></td>
+    <td><img src="test/plots/V1.2.png" width="400"></td>
+    <td><img src="test/plots/V1.3.png" width="400"></td>
+    <td><img src="test/plots/V1.4.png" width="400"></td>
+    <td><img src="test/plots/V1.0.png" width="400"></td>
   </tr>
 </table>
 ## Development Status
