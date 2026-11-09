@@ -154,6 +154,9 @@ Each configuration runs 10 warmup iterations and 100 measured iterations, with a
 
 
 ## Results 
+The images used can be found in the `resources` directory.
+
+
 ### Gaussian V1: Naive Approach 
 
 <table>
@@ -170,6 +173,18 @@ Each configuration runs 10 warmup iterations and 100 measured iterations, with a
     <td><img src="test/plots/V1.5.png" width="600"></td>
   </tr>
 </table>
+
+
+
+The images above show the results obtained using a Gaussian filter on six images of different sizes, with 15 different kernel sizes and a sigma value of 1.5.
+
+The approach used is a non-optimized (naive) implementation. The filtering operation, i.e., smoothing, is applied in both image dimensions within the same nested loop, resulting in an algorithm with O(n²) complexity.
+
+This O(n²) behavior can be observed in the graphs, where the trend becomes more pronounced as the kernel size increases.
+
+The first optimization proposed here is to use separable filters, which we will explore in the following section.
+
+
 
 ## Development Status
 
