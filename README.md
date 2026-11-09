@@ -182,8 +182,32 @@ The approach used is a non-optimized (naive) implementation. The filtering opera
 
 This O(n²) behavior can be observed in the graphs, where the trend becomes more pronounced as the kernel size increases.
 
-The first optimization proposed here is to use separable filters, which we will explore in the following section.
+Bellow the graph comparing, the execution time and average computation time.
 
+</table> 
+#### Average Execution Time per Image (ms)
+
+| Image Size | CPU (ms) | CUDA (ms) | V1 (ms) |
+|------------|----------|-----------|---------|
+| 453×340    | 0.262416 | 0.020690  | 0.154490 |
+| 532×532    | 0.424069 | 0.033154  | 0.255565 |
+| 597×335    | 0.325389 | 0.024617  | 0.192899 |
+| 540×720    | 0.492039 | 0.042909  | 0.342717 |
+| 1920×1080  | 1.708543 | 0.184896  | 1.587830 |
+
+#### Overall Average Execution Time (ms)
+
+| Implementation | Average Time (ms) |
+|----------------|-------------------|
+| CPU            | 0.642491          |
+| CUDA           | 0.061253          |
+| V1             | 0.506700          |
+
+
+The results obtained show that V1 is approximately 1.27× faster on average than OpenCV's CPU 
+Gaussian filter implementation, but 8.27× slower on average than its CUDA implementation. 
+Despite being a naive approach, one can observe the performance improvement achieved simply 
+through parallelization.
 
 
 ## Development Status
