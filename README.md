@@ -31,6 +31,7 @@ The project also serves as a platform for experimenting with CUDA optimization t
 ## Requirements
 
 - NVIDIA GPU with CUDA support
+- Cuda-13.4
 - CUDA Toolkit
 - OpenCV 4 (for image loading and reference implementations)
 - CMake 3.18 or later
@@ -73,7 +74,7 @@ Additional algorithms and CUDA implementations are planned and will be integrate
 | Gaussian Filter | V1 | Naive 2D convolution | Implemented |
 | Gaussian Filter | V2 | Separable convolution | Implemented |
 | Gaussian Filter | V3 | Separable convolution with constant memory | Implemented |
-| Gaussian Filter | V4 | Separable convolution with constant and shared memory | Not implemented yet |
+| Gaussian Filter | V4 | Separable convolution with shared memory | Implemented |
 | Median Filter | — | Naive 2D neighborhood filtering | Implemented (not refactored yet) |
 | Average Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
 | Sobel Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
@@ -150,6 +151,20 @@ Each configuration runs 10 warmup iterations and 100 measured iterations, with a
 
 **Note:** Update the `IMAGES` array in `run.sh` to reference other images available on your system.
 
+
+
+## Results 
+### Gaussian V1: Naive Approach 
+<table>
+  <tr>
+    <td><img src="test/plots/V1.0" width="400"></td>
+    <td><img src="test/plots/V1.1" width="400"></td>
+    <td><img src="test/plots/V1.2" width="400"></td>
+    <td><img src="test/plots/V1.3" width="400"></td>
+    <td><img src="test/plots/V1.4" width="400"></td>
+    <td><img src="test/plots/V1.0" width="400"></td>
+  </tr>
+</table>
 ## Development Status
 
 The project currently prioritizes:

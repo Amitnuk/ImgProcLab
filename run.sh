@@ -24,23 +24,24 @@ cmake --build "${BUILD_DIR}"
  
 # Benchmake configuration 
 ALGORITHM="gaussian"
-VERSIONS=(v1 v2 v3)
+VERSIONS=(v1 v2 v3 v4)
 KERNEL_SIZES=(3 5 7 9 11 13 15 17 19 21 23 25 27 29 31)
-SIGMA=2.0
+SIGMA=1.5
 
 WARMAPS=10
 ITERATIONS=100 
 
 IMAGES=("${RESOURCE_DIR}/parrot.png"
-        "${RESOURCE_DIR}/einstein.jpg"
+        "${RESOURCE_DIR}/pitbull.jpeg"
         "${RESOURCE_DIR}/Car.jpeg"
+        "${RESOURCE_DIR}/einstein.jpg"
         "${RESOURCE_DIR}/Sunset.jpg")
 
 
 
 # ! logical not 
-# -x execuyable file
-# >&2 redirect thz output ro stderr instead of stdout
+# -x executable file
+# >&2 redirect the output to stderr instead of stdout
 if [[ ! -x "$EXECUTABLE" ]]; then 
     echo "Executable not found: ${EXECUTABLE}" >&2
     exit 1

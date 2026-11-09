@@ -1,18 +1,18 @@
 #pragma once
 #include "CudaUtils.hpp"
-#include <iostream>
-#include <cuda_runtime.h>
-#include <stdexcept> 
 #include <chrono>
+#include <cuda_runtime.h>
+#include <iostream>
+#include <stdexcept>
 
 enum class Backend
-{   
+{
     CUDA,
     CPU
 };
 
-template<typename LaunchFunction>
-float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool& bBenchmark, const int& iWarmups = 10, const int& iIterations = 100)
+template <typename LaunchFunction>
+float executeOpenCV(LaunchFunction &&launch, const Backend &backend, const bool &bBenchmark, const int &iWarmups = 10, const int &iIterations = 100)
 {
 
     if(iWarmups < 0 || iIterations <= 0)
@@ -29,43 +29,43 @@ float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool
 
 
 #ifdef PROFILE_CUDA
-    throw std::invalid_argument("Can not launch comparision while cuda profiling is activated, add -DPROFILE_CUDA=OFF");
+    throw std::runtime_error("Can not launch comparision while cuda profiling is activated, add -DPROFILE_CUDA=OFF");
 #endif
 
     if(backend == Backend::CPU)
     {
 
-        for(int i = 0; i< iWarmups; i++)
+        for(int i = 0; i < iWarmups; i++)
         {
             launch();
         }
 
         auto oStart = std::chrono::steady_clock::now();
 
-        for(int i = 0; i< iIterations; i++)
+        for(int i = 0; i < iIterations; i++)
         {
             launch();
         }
 
         auto oStop = std::chrono::steady_clock::now();
 
-        fTimeElapsed = std::chrono::duration<float,std::milli>(oStop - oStart).count();
+        fTimeElapsed = std::chrono::duration<float, std::milli>(oStop - oStart).count();
         fTimeElapsed /= static_cast<float>(iIterations);
-        std::cout << "Average OpenCV CPU Kernel time: "<< fTimeElapsed << "ms\n";
+        std::cout << "Average OpenCV CPU Kernel time: " << fTimeElapsed << "ms\n";
     }
     else if(backend == Backend::CUDA)
     {
-        for(int i = 0; i< iWarmups; i++)
+        for(int i = 0; i < iWarmups; i++)
         {
             launch();
         }
         CUDA_CHECK(cudaGetLastError());
         CUDA_CHECK(cudaDeviceSynchronize());
-        
+
         cudaEvent_t oStart, oStop;
         CUDA_CHECK(cudaEventCreate(&oStart));
-        CUDA_CHECK(cudaEventCreate(&oStop)); 
-        CUDA_CHECK(cudaEventRecord(oStart)); 
+        CUDA_CHECK(cudaEventCreate(&oStop));
+        CUDA_CHECK(cudaEventRecord(oStart));
 
         for(int i = 0; i < iIterations; i++)
         {
@@ -75,9 +75,9 @@ float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool
         CUDA_CHECK(cudaEventRecord(oStop));
         CUDA_CHECK(cudaEventSynchronize(oStop));
         CUDA_CHECK(cudaEventElapsedTime(&fTimeElapsed, oStart, oStop));
-        
+
         fTimeElapsed /= static_cast<float>(iIterations);
-        std::cout << "Average OpenCV CUDA Kernel time: "<< fTimeElapsed << "ms\n";
+        std::cout << "Average OpenCV CUDA Kernel time: " << fTimeElapsed << "ms\n";
         CUDA_CHECK(cudaGetLastError());
         CUDA_CHECK(cudaDeviceSynchronize());
         CUDA_CHECK(cudaEventDestroy(oStart));
@@ -85,9 +85,9 @@ float executeOpenCV(LaunchFunction&&  launch, const Backend& backend, const bool
     }
     else
     {
-        throw std::invalid_argument("Unkown mode, only two modes available GPU or CUDA");
+        throw std::runtime_error("Unkown mode, only two modes available GPU or CUDA");
     }
-    
+
 
     return fTimeElapsed;
 }

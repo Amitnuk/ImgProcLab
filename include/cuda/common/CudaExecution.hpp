@@ -1,23 +1,23 @@
 #pragma once
 #include "CudaUtils.hpp"
-#include <iostream>
 #include <cuda_runtime.h>
+#include <iostream>
 #include <stdexcept>
 
 
-template<typename LaunchFunction>
-float executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const int& iWarmups = 10, const int& iIterations = 100)
+template <typename LaunchFunction>
+float executeCuda(LaunchFunction &&launch, const bool &bBenchmark = false, const int &iWarmups = 10, const int &iIterations = 100)
 {
     float fElapsedTime = 0.0f;
 #ifdef PROFILE_CUDA
-        if(!bBenchmark)
-        {
-            launch();        
-        }
-        else
-        {
-            throw std::invalid_argument("Benchmarking is unavailable in PROFILE_CUDA mode");
-        }
+    if(!bBenchmark)
+    {
+        launch();
+    }
+    else
+    {
+        throw std::runtime_error("Benchmarking is unavailable in PROFILE_CUDA mode");
+    }
 #else
 
 #ifdef IMGPROCLAB_DEBUG
@@ -31,7 +31,7 @@ float executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const
 
     if(!bBenchmark)
     {
-        launch();        
+        launch();
     }
     else
     {
@@ -44,21 +44,21 @@ float executeCuda(LaunchFunction&& launch, const bool& bBenchmark = false, const
         CUDA_CHECK(cudaGetLastError());
 
         cudaEvent_t oStart, oStop;
-       
+
         CUDA_CHECK(cudaEventCreate(&oStart));
         CUDA_CHECK(cudaEventCreate(&oStop));
         CUDA_CHECK(cudaEventRecord(oStart));
 
-        for (int i = 0; i < iIterations; i++)
+        for(int i = 0; i < iIterations; i++)
         {
             launch();
         }
-        
+
         CUDA_CHECK(cudaEventRecord(oStop))
         CUDA_CHECK(cudaEventSynchronize(oStop));
         CUDA_CHECK(cudaEventElapsedTime(&fElapsedTime, oStart, oStop));
         fElapsedTime /= static_cast<float>(iIterations);
-        std::cout << "Average kernel time: "<< fElapsedTime << "ms\n";
+        std::cout << "Average kernel time: " << fElapsedTime << "ms\n";
     }
 #endif
     CUDA_CHECK(cudaGetLastError());
