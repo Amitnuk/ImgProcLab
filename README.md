@@ -188,6 +188,7 @@ This O(n²) behavior can be observed in the graphs, where the trend becomes more
 Bellow the graph comparing, the execution time and average computation time.
 
 </table> 
+
  **Average Execution Time per Image (ms)**
 
 | Image Size | CPU (ms) | CUDA (ms) | V1 (ms) |
