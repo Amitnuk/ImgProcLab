@@ -1,0 +1,47 @@
+If:
+  PathMatch: .*\.cuh?$
+
+CompileFlags:
+  Compiler: clang++
+  Add:
+    - -x
+    - cuda
+    - --cuda-path=/usr/local/cuda-13.4
+    - --no-cuda-version-check
+
+    # ImgProcLab headers
+    - -I/home/kuntima/Workspace/githubs/ImgProcLab/include
+
+    # OpenCV headers
+    - -isystem/usr/local/include/opencv4
+
+    # CUDA headers
+    - -isystem/usr/local/cuda-13.4/targets/x86_64-linux/include
+    - -isystem/usr/local/cuda-13.4/targets/x86_64-linux/include/cccl
+
+  Remove:
+    - --options-file
+    - -forward-unknown-to-host-compiler
+    - -gencode*
+    - --generate-code*
+    - -Xcompiler*
+    - -Xcudafe*
+    - -ccbin*
+    - --compiler-options*
+    - --expt-relaxed-constexpr
+    - --expt-extended-lambda
+    - -rdc=*
+
+
+
+
+
+If:
+  PathMatch: .*\.hpp$
+
+CompileFlags:
+  Add:
+    - -I/home/kuntima/Workspace/githubs/ImgProcLab/include
+    - -isystem/usr/local/include/opencv4
+    - -isystem/usr/local/cuda-13.4/targets/x86_64-linux/include
+    - -isystem/usr/local/cuda-13.4/targets/x86_64-linux/include/cccl

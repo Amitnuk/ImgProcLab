@@ -1,0 +1,8 @@
+*.*~
+build
+.vscode
+.cache
+*.json
+bin
+config.h
+*.csv

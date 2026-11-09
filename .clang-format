@@ -1,0 +1,32 @@
+BasedOnStyle: Microsoft
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+Language: Cpp
+
+BreakBeforeBraces: Allman
+ColumnLimit: 0
+
+
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 0
+PackConstructorInitializers: BinPack
+
+
+
+
+SeparateDefinitionBlocks: Leave
+MaxEmptyLinesToKeep: 2
+
+
+AlignAfterOpenBracket: Align
+
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: false
+  AfterForeachMacros: false
+  AfterIfMacros: false
+  AfterFunctionDeclarationName: false
+  AfterFunctionDefinitionName: false
