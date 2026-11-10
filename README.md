@@ -76,7 +76,7 @@ Additional algorithms and CUDA implementations are planned and will be integrate
 | Gaussian Filter | V2 | Separable convolution | Implemented |
 | Gaussian Filter | V3 | Separable convolution with constant memory | Implemented |
 | Gaussian Filter | V4 | Separable convolution with shared memory | Implemented |
-| Gaussian Filter | V5 | Separable convolution with constant memory and shared memory | Not implemented yet |
+| Gaussian Filter | V5 | Separable convolution with constant memory and shared memory | Implemented |
 | Median Filter | — | Naive 2D neighborhood filtering | Implemented (not refactored yet) |
 | Average Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
 | Sobel Filter | — | Naive 2D convolution | Implemented (not refactored yet) |
@@ -127,11 +127,11 @@ By default, the automated benchmarking script (`run.sh`) executes the **optimize
 - **V2:** Separable convolution.
 - **V3:** Separable convolution with constant memory.
 - **V4:** Separable convolution with shared memory.
-- **V5(ongoing):** Separable convolution with constant and shared memory.
+- **V5:** Separable convolution with constant and shared memory.
 
 Alternative configurations can be benchmarked by modifying the corresponding enum values in `AlgorithmRunner.cpp` and rebuilding the project.
 
-**Note:** V5 is not yet implemented. Configuration changes currently require modifying the source code and rebuilding the application.
+**Note:** Configuration changes currently require modifying the source code and rebuilding the application.
 
 Additional CUDA optimizations and refactoring of existing implementations are planned.
 
@@ -148,7 +148,7 @@ From the repository root:
 ./run.sh
 ```
 
-The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, V3, and V4 using kernel sizes from 3×3 to 31×31.
+The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, V3, V4 and V5 using kernel sizes from 3×3 to 31×31.
 
 Each configuration runs 10 warmup iterations and 100 measured iterations, with a Gaussian sigma of 1.5.
 
