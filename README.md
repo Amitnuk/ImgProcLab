@@ -269,6 +269,52 @@ Now the power of parallelization can be fully appreciated.
 
 
 
+
+### Gaussian V3: Separable filters with constant memory
+
+<table>
+  <tr>
+    <td><img src="test/plots/V3.0.png" width="600"></td>
+    <td><img src="test/plots/V3.1.png" width="600"></td>
+  </tr>
+  <tr>
+    <td><img src="test/plots/V3.2.png" width="600"></td>
+    <td><img src="test/plots/V3.3.png" width="600"></td>
+  </tr>
+  <tr> 
+    <td><img src="test/plots/V3.4.png" width="600"></td>
+    <td><img src="test/plots/V3.5.png" width="600"></td>
+  </tr>
+</table>
+
+The result above was obtained by applying separable filters with constant memory.
+An obvious optimization arises from the fact that the filter coefficients remain unchanged throughout execution.
+In the previous approaches, V1 and V2, the filter coefficients are accessed from global memory, which generally has high latency.
+Constant memory is a read-only memory space with a dedicated cache, making it particularly efficient when threads within a warp access the same address, as is the case in our implementation.
+
+
+**Average execution time per image (ms)**
+
+| Image resolution | CPU      | CUDA     | V3       |
+|------------------|----------|----------|----------|
+| 453×340          | 0.268790 | 0.020493 | 0.019336 |
+| 532×532          | 0.449633 | 0.033178 | 0.030482 |
+| 597×335          | 0.331683 | 0.025091 | 0.023328 |
+| 540×720          | 0.487515 | 0.042693 | 0.040084 |
+| 1920×1080        | 1.692974 | 0.196488 | 0.193848 |
+
+**Overall average execution time (ms)**
+
+| Version | Average time (ms) |
+|---------|-------------------|
+| CPU     | 0.646119          |
+| CUDA    | 0.063588          |
+| V3      | 0.061415          |
+
+The results obtained show that V3 reduces the average execution time by approximately 90.49% compared to OpenCV's CPU Gaussian filter implementation, which represents a considerable improvement. 
+Furthermore, V3 is approximately 3.42% faster than OpenCV's CUDA implementation in terms of execution time. 
+
+
 ## Development Status
 
 The project currently prioritizes:
