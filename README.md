@@ -214,6 +214,61 @@ Despite being a naive approach, one can observe the performance improvement achi
 through parallelization.
 
 
+
+### Gaussian V2: Separable filters 
+
+<table>
+  <tr>
+    <td><img src="test/plots/V2.0.png" width="600"></td>
+    <td><img src="test/plots/V2.1.png" width="600"></td>
+  </tr>
+  <tr>
+    <td><img src="test/plots/V2.2.png" width="600"></td>
+    <td><img src="test/plots/V2.3.png" width="600"></td>
+  </tr>
+  <tr> 
+    <td><img src="test/plots/V2.4.png" width="600"></td>
+    <td><img src="test/plots/V2.5.png" width="600"></td>
+  </tr>
+</table>
+
+
+The result above was obtained by applying separable filters. A separable filter is a filter that can be decomposed into two or more simpler filters. 
+In the case of the separable Gaussian filter, the same result can be obtained by applying a vertical filter followed by a horizontal filter, or vice versa.
+
+As expected, the result is competitive with that obtained using the CUDA implementation of OpenCV. Unlike V1, V2 has a computational complexity of O(n), where n is the kernel size. 
+All subsequent versions of the Gaussian filter will use filter separability as their foundation.
+
+</table> 
+
+ **Average execution time per image (ms)**
+
+| Image resolution | CPU      | CUDA     | V2       |
+|------------------|----------|----------|----------|
+| 453×340          | 0.267030 | 0.020965 | 0.020403 |
+| 532×532          | 0.429130 | 0.034563 | 0.032190 |
+| 597×335          | 0.315111 | 0.025102 | 0.024668 |
+| 540×720          | 0.499446 | 0.042216 | 0.041801 |
+| 1920×1080        | 1.695293 | 0.196706 | 0.202421 |
+
+**Overall average execution time (ms)**
+
+| Version | Average time (ms) |
+|---------|-------------------|
+| CPU     | 0.641202          |
+| CUDA    | 0.063910          |
+| V2      | 0.064297          |
+
+
+
+
+
+The results obtained show that V1 is approximately 89.97% faster on average than OpenCV's CPU 
+Gaussian filter implementation, which is a considerable improvement on V1, but 0.60% slower on average than its CUDA implementation. 
+Now the power of parallelization can be fully appreciated.
+
+
+
 ## Development Status
 
 The project currently prioritizes:
