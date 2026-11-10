@@ -24,7 +24,7 @@ cmake --build "${BUILD_DIR}"
  
 # Benchmake configuration 
 ALGORITHM="gaussian"
-VERSIONS=(v1 v2 v3 v4)
+VERSIONS=(v1 v2 v3 v4 v5)
 KERNEL_SIZES=(3 5 7 9 11 13 15 17 19 21 23 25 27 29 31)
 SIGMA=1.5
 

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # 540 720 -----> einstein.jpg
 # 1920 1080 ---> Sunset.jpg
 
-df = pd.read_csv("../app/ImgProcLabDemo/benchmark/results/gaussianV1.csv")
+df = pd.read_csv("../app/ImgProcLabDemo/benchmark/results/gaussianV2.csv")
 
 Size = [(453, 340), (532, 532), (597, 335),
         (540, 720), (1920, 1080)]

@@ -28,6 +28,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_TARGET_DIRECTORY}/libs/static") # s
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_TARGET_DIRECTORY}/libs/dynamic") # dynamic
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_TARGET_DIRECTORY}")
 
+
 find_package(OpenCV REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
@@ -40,6 +41,7 @@ add_library(ImgProcLab STATIC
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV2.cu
               ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV3.cu
               ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV4.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV5.cu
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianPrepare.cu
 
 			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianCuda.hpp

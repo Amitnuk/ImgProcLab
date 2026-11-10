@@ -227,7 +227,7 @@ void AlgorithmRunner::prepare()
         {
 
             std::cout << "Executing GaussianFilter V4" << std::endl;
-            std::cout << "Naive 2D Convolution With Shared Memory" << std::endl;
+            std::cout << "Separable 1D Convolution With Shared Memory" << std::endl;
             std::cout << "Gaussian Kernel Launcher" << std::endl;
 
             ::displayInfo(m_eConfig);
@@ -271,6 +271,54 @@ void AlgorithmRunner::prepare()
             }
 
 
+            break;
+        }
+        case Version::V5:
+        {
+
+            std::cout << "Executing GaussianFilter V5" << std::endl;
+            std::cout << "Separable 1D Convolution With Constant and Shared Memory" << std::endl;
+            std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+            ::displayInfo(m_eConfig);
+
+            cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+
+            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
+                                                               *m_eConfig.m_iKernelSize,
+                                                               *m_eConfig.m_fSigma,
+                                                               ImgProcLab::GaussianVersion::V5,
+                                                               Separable::TRUE,
+                                                               METHOD::CONSTANT);
+
+            m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
+
+
+            if(m_eConfig.m_bBenchmark)
+            {
+                benchmark(ImgProcLab::detail::gaussianV5,
+                          oImage,
+                          "gaussian",
+                          "V5",
+                          bVisualize,
+                          Separable::TRUE);
+            }
+            else if(bVisualize)
+            {
+
+                executeCuda([&]()
+                            { ImgProcLab::detail::gaussianV5(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, Separable::TRUE); },
+                            false, 0, 0);
+                const auto [iWidth, iHeight] = oImage.size();
+
+                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+
+                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                cv::imshow("Original Image", oImage);
+                cv::imshow("Gaussian Blurred Image", oOutputImage);
+                cv::waitKey(0);
+            }
             break;
         }
         default:
