@@ -311,8 +311,15 @@ Constant memory is a read-only memory space with a dedicated cache, making it pa
 | CUDA    | 0.063588          |
 | V3      | 0.061415          |
 
-The results obtained show that V3 reduces the average execution time by approximately 90.49% compared to OpenCV's CPU Gaussian filter implementation, which represents a considerable improvement. 
-Furthermore, V3 is approximately 3.42% faster than OpenCV's CUDA implementation in terms of execution time. 
+
+The results obtained show that V3 reduces the average execution time by approximately 90.49% compared to OpenCV's CPU Gaussian filter implementation, which represents a considerable improvement.
+Furthermore, V3 reduces the average execution time by approximately 3.42% compared to OpenCV's CUDA implementation.
+Although V3 outperforms OpenCV's CUDA implementation, the performance improvement remains relatively small. 
+To better understand the kernel's behavior and identify potential bottlenecks, we will use NVIDIA Nsight Compute (NCU) to analyze its execution.
+The profiling results will help determine whether further optimizations are worthwhile. 
+
+
+### Profiling with Nsight Compute (NCU)
 
 
 ## Development Status
