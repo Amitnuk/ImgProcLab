@@ -5,245 +5,366 @@
 #include <cstddef>
 #include <stdexcept>
 
-
 namespace ImgProcLab
 {
-namespace detail
-{
-constexpr int CHANNELS = 3;
-__global__ void GaussianFilterKernelV4(const uchar *pIn, uchar *pOut, const float *pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
-{
-
-    int col = threadIdx.x + blockIdx.x * CONSTANTS::DEFAULT_THREADS;
-    int row = threadIdx.y + blockIdx.y * CONSTANTS::DEFAULT_THREADS; //
-
-    __shared__ float Mds[CONSTANTS::DEFAULT_THREADS * CONSTANTS::DEFAULT_THREADS * CHANNELS];
-
-
-    // load Mds --> thread block
-    if((row < iHeight) && (col < iWidth))
+    namespace detail
     {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 0]);
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 1]);
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 2]);
-    }
-    else
-    {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = 0.0f;
-    }
-
-    __syncthreads();
-
-
-    if((row < iHeight) && (col < iWidth))
-    {
-
-        float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
-        int iRadius = iKernelSize / 2;
-
-        for(int iRow = 0; iRow < iKernelSize; ++iRow)
+        constexpr int CHANNELS = 3;
+        __global__ void GaussianFilterKernelV4(const uchar *pIn, uchar *pOut, const float *pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
         {
-            for(int iCol = 0; iCol < iKernelSize; ++iCol)
+
+            int col = threadIdx.x + blockIdx.x * CONSTANTS::BLOCK_DIM_X;
+            int row = threadIdx.y + blockIdx.y * CONSTANTS::BLOCK_DIM_Y; //
+
+            __shared__ float Mds[CONSTANTS::BLOCK_DIM_X * CONSTANTS::BLOCK_DIM_Y * CHANNELS];
+
+
+            // load Mds --> thread block
+            if((row < iHeight) && (col < iWidth))
             {
-                if((static_cast<int>(threadIdx.x) + iCol - iRadius >= 0) &&
-                   (static_cast<int>(threadIdx.x) + iCol - iRadius < CONSTANTS::DEFAULT_THREADS) &&
-                   (static_cast<int>(threadIdx.y) + iRow - iRadius >= 0) &&
-                   (static_cast<int>(threadIdx.y) + iRow - iRadius < CONSTANTS::DEFAULT_THREADS))
-                { // inside a block
-                    int iImageIndex = ((threadIdx.y - iRadius + iRow) * CONSTANTS::DEFAULT_THREADS + (threadIdx.x - iRadius + iCol)) * CHANNELS;
-                    int iKernelIndex = iRow * iKernelSize + iCol;
-                    const float &fWeights = pKernel[iKernelIndex];
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 0] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 0]);
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 1] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 1]);
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 2] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 2]);
+            }
+            else
+            {
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 0] = 0.0f;
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 1] = 0.0f;
+                Mds[(threadIdx.y * CONSTANTS::BLOCK_DIM_X + threadIdx.x) * CHANNELS + 2] = 0.0f;
+            }
+
+            __syncthreads();
+
+
+            if((row < iHeight) && (col < iWidth))
+            {
+
+                float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
+                int iRadius = iKernelSize / 2;
+
+                for(int iRow = 0; iRow < iKernelSize; ++iRow)
+                {
+                    for(int iCol = 0; iCol < iKernelSize; ++iCol)
+                    {
+                        if((static_cast<int>(threadIdx.x) + iCol - iRadius >= 0) &&
+                           (static_cast<int>(threadIdx.x) + iCol - iRadius < CONSTANTS::BLOCK_DIM_X) &&
+                           (static_cast<int>(threadIdx.y) + iRow - iRadius >= 0) &&
+                           (static_cast<int>(threadIdx.y) + iRow - iRadius < CONSTANTS::BLOCK_DIM_Y))
+                        { // inside a block
+                            int iImageIndex = ((threadIdx.y - iRadius + iRow) * CONSTANTS::BLOCK_DIM_X + (threadIdx.x - iRadius + iCol)) * CHANNELS;
+                            int iKernelIndex = iRow * iKernelSize + iCol;
+                            const float &fWeights = pKernel[iKernelIndex];
+                            vBGR[0] += Mds[iImageIndex + 0] * fWeights;
+                            vBGR[1] += Mds[iImageIndex + 1] * fWeights;
+                            vBGR[2] += Mds[iImageIndex + 2] * fWeights;
+                        }
+                        else if((row + iRow - iRadius >= 0) &&
+                                (row + iRow - iRadius < iHeight) &&
+                                (col + iCol - iRadius >= 0) &&
+                                (col + iCol - iRadius < iWidth))
+                        { // outside a block but still inside an image --> halo cells
+                            int iImageIndex = ((row - iRadius + iRow) * iWidth + (col - iRadius + iCol)) * CHANNELS;
+                            int iKernelIndex = iRow * iKernelSize + iCol;
+                            const float &fWeights = pKernel[iKernelIndex];
+                            vBGR[0] += pIn[iImageIndex + 0] * fWeights;
+                            vBGR[1] += pIn[iImageIndex + 1] * fWeights;
+                            vBGR[2] += pIn[iImageIndex + 2] * fWeights;
+                        }
+                    }
+                }
+
+                int iImageIndex = (row * iWidth + col) * CHANNELS;
+                pOut[iImageIndex + 0] = static_cast<uchar>(__float2int_rn(vBGR[0]));
+                pOut[iImageIndex + 1] = static_cast<uchar>(__float2int_rn(vBGR[1]));
+                pOut[iImageIndex + 2] = static_cast<uchar>(__float2int_rn(vBGR[2]));
+            }
+        }
+
+        __global__ void GaussianFilterKernelHorizontalV4(const uchar *pIn,
+                                                         float *pOut,
+                                                         const float *pKernel,
+                                                         int iHeight,
+                                                         int iWidth,
+                                                         const std::size_t iKernelSize = 3)
+        {
+
+
+            extern __shared__ float Mds[];
+            int iRadius = iKernelSize / 2;
+            const int BLOCK = CONSTANTS::BLOCK_DIM_X + 2 * iRadius;
+            int col = threadIdx.x + blockIdx.x * CONSTANTS::BLOCK_DIM_X;
+            int row = threadIdx.y + blockIdx.y * CONSTANTS::BLOCK_DIM_Y;
+            {
+
+                int iSharedIndex = (threadIdx.y * BLOCK + threadIdx.x) * CHANNELS;
+
+                if(row < iHeight && col - iRadius >= 0 && col - iRadius < iWidth)
+                {
+                    int iInputIndex = (row * iWidth - iRadius + col) * CHANNELS;
+                    Mds[iSharedIndex + 0] = static_cast<float>(pIn[iInputIndex + 0]);
+                    Mds[iSharedIndex + 1] = static_cast<float>(pIn[iInputIndex + 1]);
+                    Mds[iSharedIndex + 2] = static_cast<float>(pIn[iInputIndex + 2]);
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+
+            if(threadIdx.x < 2 * iRadius)
+            {
+
+
+                int iInputIndex = (row * iWidth - iRadius + col + CONSTANTS::BLOCK_DIM_X) * CHANNELS;
+                int iSharedIndex = (threadIdx.y * BLOCK + threadIdx.x + CONSTANTS::BLOCK_DIM_X) * CHANNELS;
+
+                if(row < iHeight && col - iRadius + CONSTANTS::BLOCK_DIM_X >= 0 && col - iRadius + CONSTANTS::BLOCK_DIM_X < iWidth)
+                {
+
+                    Mds[iSharedIndex + 0] = static_cast<float>(pIn[iInputIndex + 0]);
+                    Mds[iSharedIndex + 1] = static_cast<float>(pIn[iInputIndex + 1]);
+                    Mds[iSharedIndex + 2] = static_cast<float>(pIn[iInputIndex + 2]);
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+            __syncthreads();
+
+            if(col < iWidth && row < iHeight)
+            {
+                float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
+
+
+                for(int iCol = 0; iCol < iKernelSize; ++iCol)
+                {
+
+                    int iImageIndex = (threadIdx.y * BLOCK + (threadIdx.x + iCol)) * CHANNELS;
+                    const float &fWeights = pKernel[iCol];
                     vBGR[0] += Mds[iImageIndex + 0] * fWeights;
                     vBGR[1] += Mds[iImageIndex + 1] * fWeights;
                     vBGR[2] += Mds[iImageIndex + 2] * fWeights;
                 }
-                else if((row + iRow - iRadius >= 0) &&
-                        (row + iRow - iRadius < iHeight) &&
-                        (col + iCol - iRadius >= 0) &&
-                        (col + iCol - iRadius < iWidth))
-                { // outside a block but still inside an image --> halo cells
-                    int iImageIndex = ((row - iRadius + iRow) * iWidth + (col - iRadius + iCol)) * CHANNELS;
-                    int iKernelIndex = iRow * iKernelSize + iCol;
-                    const float &fWeights = pKernel[iKernelIndex];
-                    vBGR[0] += pIn[iImageIndex + 0] * fWeights;
-                    vBGR[1] += pIn[iImageIndex + 1] * fWeights;
-                    vBGR[2] += pIn[iImageIndex + 2] * fWeights;
+                int iImageIndex = (row * iWidth + col) * CHANNELS;
+                pOut[iImageIndex + 0] = vBGR[0];
+                pOut[iImageIndex + 1] = vBGR[1];
+                pOut[iImageIndex + 2] = vBGR[2];
+            }
+        }
+
+        __global__ void GaussianFilterKernelVerticalV4(
+            const float *pIn,
+            uchar *pOut,
+            const float *pKernel,
+            int iHeight,
+            int iWidth,
+            const std::size_t iKernelSize = 3)
+        {
+            extern __shared__ float Mds[];
+
+            int iRadius = iKernelSize / 2;
+            const int BLOCK = CONSTANTS::BLOCK_DIM_X;
+
+            int col = threadIdx.x + blockIdx.x * CONSTANTS::BLOCK_DIM_X;
+            int row = threadIdx.y + blockIdx.y * CONSTANTS::BLOCK_DIM_Y;
+
+            // First load: shared-memory rows 0–7
+            {
+                int iSharedIndex =
+                    (threadIdx.y * BLOCK + threadIdx.x) * CHANNELS;
+
+                int iInputRow = row - iRadius;
+
+                if(col < iWidth && iInputRow >= 0 && iInputRow < iHeight)
+                {
+                    int iInputIndex = (iInputRow * iWidth + col) * CHANNELS;
+
+                    Mds[iSharedIndex + 0] = pIn[iInputIndex + 0];
+                    Mds[iSharedIndex + 1] = pIn[iInputIndex + 1];
+                    Mds[iSharedIndex + 2] = pIn[iInputIndex + 2];
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
                 }
             }
+
+            // Second load: shared-memory rows 8–15
+            if(threadIdx.y < 2 * iRadius)
+            {
+                int iSharedIndex =
+                    ((threadIdx.y + CONSTANTS::BLOCK_DIM_Y) * BLOCK + threadIdx.x) * CHANNELS;
+
+                int iInputRow = row - iRadius + CONSTANTS::BLOCK_DIM_Y;
+
+                if(col < iWidth && iInputRow >= 0 && iInputRow < iHeight)
+                {
+                    int iInputIndex = (iInputRow * iWidth + col) * CHANNELS;
+
+                    Mds[iSharedIndex + 0] = pIn[iInputIndex + 0];
+                    Mds[iSharedIndex + 1] = pIn[iInputIndex + 1];
+                    Mds[iSharedIndex + 2] = pIn[iInputIndex + 2];
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+
+            // Third load: shared-memory rows 16–23
+            if(threadIdx.y + CONSTANTS::BLOCK_DIM_Y < 2 * iRadius)
+            {
+                int iSharedIndex =
+                    ((threadIdx.y + CONSTANTS::BLOCK_DIM_Y * 2) * BLOCK + threadIdx.x) * CHANNELS;
+
+                int iInputRow = row - iRadius + CONSTANTS::BLOCK_DIM_Y * 2;
+
+                if(col < iWidth && iInputRow >= 0 && iInputRow < iHeight)
+                {
+                    int iInputIndex = (iInputRow * iWidth + col) * CHANNELS;
+
+                    Mds[iSharedIndex + 0] = pIn[iInputIndex + 0];
+                    Mds[iSharedIndex + 1] = pIn[iInputIndex + 1];
+                    Mds[iSharedIndex + 2] = pIn[iInputIndex + 2];
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+
+            // Fourth load: shared-memory rows 24–31
+            if(threadIdx.y + CONSTANTS::BLOCK_DIM_Y * 2 < 2 * iRadius)
+            {
+                int iSharedIndex =
+                    ((threadIdx.y + CONSTANTS::BLOCK_DIM_Y * 3) * BLOCK + threadIdx.x) * CHANNELS;
+
+                int iInputRow = row - iRadius + CONSTANTS::BLOCK_DIM_Y * 3;
+
+                if(col < iWidth && iInputRow >= 0 && iInputRow < iHeight)
+                {
+                    int iInputIndex = (iInputRow * iWidth + col) * CHANNELS;
+
+                    Mds[iSharedIndex + 0] = pIn[iInputIndex + 0];
+                    Mds[iSharedIndex + 1] = pIn[iInputIndex + 1];
+                    Mds[iSharedIndex + 2] = pIn[iInputIndex + 2];
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+
+            // Fifth load: shared-memory rows 32–37
+            if(threadIdx.y + CONSTANTS::BLOCK_DIM_Y * 3 < 2 * iRadius)
+            {
+                int iSharedIndex =
+                    ((threadIdx.y + CONSTANTS::BLOCK_DIM_Y * 4) * BLOCK + threadIdx.x) * CHANNELS;
+
+                int iInputRow = row - iRadius + CONSTANTS::BLOCK_DIM_Y * 4;
+
+                if(col < iWidth && iInputRow >= 0 && iInputRow < iHeight)
+                {
+                    int iInputIndex = (iInputRow * iWidth + col) * CHANNELS;
+
+                    Mds[iSharedIndex + 0] = pIn[iInputIndex + 0];
+                    Mds[iSharedIndex + 1] = pIn[iInputIndex + 1];
+                    Mds[iSharedIndex + 2] = pIn[iInputIndex + 2];
+                }
+                else
+                {
+                    Mds[iSharedIndex + 0] = 0.0f;
+                    Mds[iSharedIndex + 1] = 0.0f;
+                    Mds[iSharedIndex + 2] = 0.0f;
+                }
+            }
+
+            __syncthreads();
+
+            if(col < iWidth && row < iHeight)
+            {
+                float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
+
+                for(int iRow = 0; iRow < iKernelSize; ++iRow)
+                {
+                    int iImageIndex =
+                        ((threadIdx.y + iRow) * BLOCK + threadIdx.x) * CHANNELS;
+
+                    const float &fWeights = pKernel[iRow];
+
+                    vBGR[0] += Mds[iImageIndex + 0] * fWeights;
+                    vBGR[1] += Mds[iImageIndex + 1] * fWeights;
+                    vBGR[2] += Mds[iImageIndex + 2] * fWeights;
+                }
+
+                int iImageIndex = (row * iWidth + col) * CHANNELS;
+
+                pOut[iImageIndex + 0] = static_cast<uchar>(__float2int_rn(vBGR[0]));
+                pOut[iImageIndex + 1] = static_cast<uchar>(__float2int_rn(vBGR[1]));
+                pOut[iImageIndex + 2] = static_cast<uchar>(__float2int_rn(vBGR[2]));
+            }
         }
 
-        int iImageIndex = (row * iWidth + col) * CHANNELS;
-        pOut[iImageIndex + 0] = static_cast<uchar>(__float2int_rn(vBGR[0]));
-        pOut[iImageIndex + 1] = static_cast<uchar>(__float2int_rn(vBGR[1]));
-        pOut[iImageIndex + 2] = static_cast<uchar>(__float2int_rn(vBGR[2]));
-    }
-}
-
-__global__ void GaussianFilterKernelHorizontalV4(const uchar *pIn, float *pOut, const float *pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
-{
-    int col = threadIdx.x + blockIdx.x * CONSTANTS::DEFAULT_THREADS;
-    int row = threadIdx.y + blockIdx.y * CONSTANTS::DEFAULT_THREADS;
-
-    __shared__ float Mds[CONSTANTS::DEFAULT_THREADS * CONSTANTS::DEFAULT_THREADS * CHANNELS];
-
-
-    if(row < iHeight && col < iWidth)
-    {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 0]);
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 1]);
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = static_cast<float>(pIn[(row * iWidth + col) * CHANNELS + 2]);
-    }
-    else
-    {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = 0.0f;
-    }
-
-
-    __syncthreads();
-
-
-    if(col < iWidth && row < iHeight)
-    {
-        float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
-        int iRadius = iKernelSize / 2;
-
-
-        for(int iCol = 0; iCol < iKernelSize; ++iCol)
+        void gaussianV4(GaussianData &eData, const Separable eCase /*= Separable::FALSE*/)
         {
-            if(static_cast<int>(threadIdx.x) + iCol - iRadius >= 0 &&
-               static_cast<int>(threadIdx.x) + iCol - iRadius < CONSTANTS::DEFAULT_THREADS)
+
+            CudaExecutionContext &eCudaContext = eData.m_eCudaExecutionContext;
+
+            const int &iHeight = eCudaContext.m_iHeight;
+            const int &iWidth = eCudaContext.m_iWidth;
+
+            int iGridDimX = (iWidth + CONSTANTS::BLOCK_DIM_X - 1) / CONSTANTS::BLOCK_DIM_X;
+            int iGridDimY = (iHeight + CONSTANTS::BLOCK_DIM_Y - 1) / CONSTANTS::BLOCK_DIM_Y;
+
+            int iRadius = eData.m_iKernelSize / 2;
+            std::size_t iHozintalBytes = (CONSTANTS::BLOCK_DIM_X + 2 * iRadius) * CONSTANTS::BLOCK_DIM_Y * CHANNELS * sizeof(float);
+            std::size_t iVerticalBytes = CONSTANTS::BLOCK_DIM_X * (CONSTANTS::BLOCK_DIM_Y + 2 * iRadius) * CHANNELS * sizeof(float);
+
+            dim3 oGridDim(iGridDimX, iGridDimY);
+            dim3 oBlockDim(CONSTANTS::BLOCK_DIM_X, CONSTANTS::BLOCK_DIM_Y);
+
+            if(eCase == Separable::FALSE && 0)
             {
-                int iImageIndex = (threadIdx.y * CONSTANTS::DEFAULT_THREADS + (threadIdx.x + iCol - iRadius)) * CHANNELS;
-                const float &fWeights = pKernel[iCol];
-                vBGR[0] += Mds[iImageIndex + 0] * fWeights;
-                vBGR[1] += Mds[iImageIndex + 1] * fWeights;
-                vBGR[2] += Mds[iImageIndex + 2] * fWeights;
-            }
-            else if(col + iCol - iRadius >= 0 &&
-                    col + iCol - iRadius < iWidth)
-            {
-
-                int iImageIndex = (row * iWidth + (col + iCol - iRadius)) * CHANNELS;
-                const float &fWeights = pKernel[iCol];
-                vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeights;
-                vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeights;
-                vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fWeights;
-            }
-        }
-        int iImageIndex = (row * iWidth + col) * CHANNELS;
-        pOut[iImageIndex + 0] = vBGR[0];
-        pOut[iImageIndex + 1] = vBGR[1];
-        pOut[iImageIndex + 2] = vBGR[2];
-    }
-}
-
-__global__ void GaussianFilterKernelVerticalV4(const float *pIn, uchar *pOut, const float *pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
-{
-    int col = threadIdx.x + blockIdx.x * CONSTANTS::DEFAULT_THREADS;
-    int row = threadIdx.y + blockIdx.y * CONSTANTS::DEFAULT_THREADS;
-
-    __shared__ float Mds[CONSTANTS::DEFAULT_THREADS * CONSTANTS::DEFAULT_THREADS * CHANNELS];
-
-
-    if(row < iHeight && col < iWidth)
-    {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = pIn[(row * iWidth + col) * CHANNELS + 0];
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = pIn[(row * iWidth + col) * CHANNELS + 1];
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = pIn[(row * iWidth + col) * CHANNELS + 2];
-    }
-    else
-    {
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 0] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 1] = 0.0f;
-        Mds[(threadIdx.y * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS + 2] = 0.0f;
-    }
-
-
-    __syncthreads();
-
-
-    if(col < iWidth && row < iHeight)
-    {
-        float vBGR[CHANNELS] = {0.0f, 0.0f, 0.0f};
-        int iRadius = iKernelSize / 2;
-
-
-        for(int iRow = 0; iRow < iKernelSize; ++iRow)
-        {
-            if(static_cast<int>(threadIdx.y) + iRow - iRadius >= 0 &&
-               static_cast<int>(threadIdx.y) + iRow - iRadius < CONSTANTS::DEFAULT_THREADS)
-            {
-                int iImageIndex = ((threadIdx.y + iRow - iRadius) * CONSTANTS::DEFAULT_THREADS + threadIdx.x) * CHANNELS;
-                const float &fWeights = pKernel[iRow];
-                vBGR[0] += Mds[iImageIndex + 0] * fWeights;
-                vBGR[1] += Mds[iImageIndex + 1] * fWeights;
-                vBGR[2] += Mds[iImageIndex + 2] * fWeights;
-            }
-            else if(row + iRow - iRadius >= 0 &&
-                    row + iRow - iRadius < iHeight)
-            {
-
-                int iImageIndex = ((row + iRow - iRadius) * iWidth + col) * CHANNELS;
-                const float &fWeights = pKernel[iRow];
-                vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeights;
-                vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeights;
-                vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fWeights;
-            }
-        }
-        int iImageIndex = (row * iWidth + col) * CHANNELS;
-        pOut[iImageIndex + 0] = static_cast<uchar>(__float2int_rn(vBGR[0]));
-        pOut[iImageIndex + 1] = static_cast<uchar>(__float2int_rn(vBGR[1]));
-        pOut[iImageIndex + 2] = static_cast<uchar>(__float2int_rn(vBGR[2]));
-    }
-}
-
-void gaussianV4(GaussianData &eData, const int iThreads /*=CONSTANTS::DEFAULT_THREADS*/, const Separable eCase /*= Separable::FALSE*/)
-{
-
-    CudaExecutionContext &eCudaContext = eData.m_eCudaExecutionContext;
-
-    const int &iHeight = eCudaContext.m_iHeight;
-    const int &iWidth = eCudaContext.m_iWidth;
-
-    int iGridDimX = (iWidth + iThreads - 1) / iThreads;
-    int iGridDimY = (iHeight + iThreads - 1) / iThreads;
-
-    dim3 oGridDim(iGridDimX, iGridDimY);
-    dim3 oBlockDim(iThreads, iThreads);
-
-    if(eCase == Separable::FALSE)
-    {
-        GaussianFilterKernelV4<<<oGridDim, oBlockDim>>>(eCudaContext.m_oDeviceInput,
-                                                        eCudaContext.m_oDeviceOutputs,
-                                                        eCudaContext.m_oKernel.Data(),
-                                                        iHeight,
-                                                        iWidth,
-                                                        eData.m_iKernelSize);
-    }
-    else if(eCase == Separable::TRUE)
-    {
-        GaussianFilterKernelHorizontalV4<<<oGridDim, oBlockDim>>>(eCudaContext.m_oDeviceInput,
-                                                                  eCudaContext.m_oDeviceIntermediate,
-                                                                  eCudaContext.m_oKernel.Data(),
-                                                                  iHeight,
-                                                                  iWidth,
-                                                                  eData.m_iKernelSize);
-
-        GaussianFilterKernelVerticalV4<<<oGridDim, oBlockDim>>>(eCudaContext.m_oDeviceIntermediate,
+                GaussianFilterKernelV4<<<oGridDim, oBlockDim>>>(eCudaContext.m_oDeviceInput,
                                                                 eCudaContext.m_oDeviceOutputs,
                                                                 eCudaContext.m_oKernel.Data(),
                                                                 iHeight,
                                                                 iWidth,
                                                                 eData.m_iKernelSize);
-    }
-    else
-    {
-        throw std::invalid_argument("Unknown version of the Gaussian");
-    }
-}
-} // namespace detail
+            }
+            else if(eCase == Separable::TRUE)
+            {
+                GaussianFilterKernelHorizontalV4<<<oGridDim, oBlockDim, iHozintalBytes>>>(eCudaContext.m_oDeviceInput,
+                                                                                          eCudaContext.m_oDeviceIntermediate,
+                                                                                          eCudaContext.m_oKernel.Data(),
+                                                                                          iHeight,
+                                                                                          iWidth,
+                                                                                          eData.m_iKernelSize);
+
+                GaussianFilterKernelVerticalV4<<<oGridDim, oBlockDim, iVerticalBytes>>>(eCudaContext.m_oDeviceIntermediate,
+                                                                                        eCudaContext.m_oDeviceOutputs,
+                                                                                        eCudaContext.m_oKernel.Data(),
+                                                                                        iHeight,
+                                                                                        iWidth,
+                                                                                        eData.m_iKernelSize);
+            }
+            else
+            {
+                throw std::invalid_argument("Unknown version of the Gaussian");
+            }
+        }
+    } // namespace detail
 } // namespace ImgProcLab

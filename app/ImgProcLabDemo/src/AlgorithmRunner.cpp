@@ -19,57 +19,57 @@
 
 namespace
 {
-void compareImage(const cv::Mat &oAtual, const cv::Mat &oReference)
-{
-    if(oAtual.size() != oReference.size() || oAtual.type() != oReference.type())
+    void compareImage(const cv::Mat &oAtual, const cv::Mat &oReference)
     {
-        throw std::invalid_argument("Selected images are incompatible");
+        if(oAtual.size() != oReference.size() || oAtual.type() != oReference.type())
+        {
+            throw std::invalid_argument("Selected images are incompatible");
+        }
+
+        cv::Mat oDifference;
+        cv::absdiff(oAtual, oReference, oDifference);
+        cv::Scalar oMean = cv::mean(oDifference);
+        float fMAE = 0.0f;
+        const size_t iChannels = oAtual.channels();
+        for(size_t i = 0; i < iChannels; ++i)
+        {
+            fMAE += oMean[i];
+        }
+
+        fMAE /= iChannels;
+        double fMaxError = 0.0;
+        cv::minMaxLoc(oDifference.reshape(1), nullptr, &fMaxError);
+
+        std::cout << "Mean Absolute Error: " << fMAE << std::endl;
+        std::cout << "Maximum Absolute Error: " << fMaxError << std::endl;
     }
 
-    cv::Mat oDifference;
-    cv::absdiff(oAtual, oReference, oDifference);
-    cv::Scalar oMean = cv::mean(oDifference);
-    float fMAE = 0.0f;
-    const size_t iChannels = oAtual.channels();
-    for(size_t i = 0; i < iChannels; ++i)
+    auto displayInfo = [](const AlgorithmConfig &eConfig)
     {
-        fMAE += oMean[i];
-    }
+        if(eConfig.m_iKernelSize)
+        {
+            std::cout << "Kernel size: " << *eConfig.m_iKernelSize << std::endl;
+        }
 
-    fMAE /= iChannels;
-    double fMaxError = 0.0;
-    cv::minMaxLoc(oDifference.reshape(1), nullptr, &fMaxError);
+        if(eConfig.m_iHeight)
+        {
+            std::cout << "Height: " << *eConfig.m_iHeight << std::endl;
+        }
 
-    std::cout << "Mean Absolute Error: " << fMAE << std::endl;
-    std::cout << "Maximum Absolute Error: " << fMaxError << std::endl;
-}
+        if(eConfig.m_iWidth)
+        {
+            std::cout << "Width: " << *eConfig.m_iWidth << std::endl;
+        }
 
-auto displayInfo = [](const AlgorithmConfig &eConfig)
-{
-    if(eConfig.m_iKernelSize)
-    {
-        std::cout << "Kernel size: " << *eConfig.m_iKernelSize << std::endl;
-    }
-
-    if(eConfig.m_iHeight)
-    {
-        std::cout << "Height: " << *eConfig.m_iHeight << std::endl;
-    }
-
-    if(eConfig.m_iWidth)
-    {
-        std::cout << "Width: " << *eConfig.m_iWidth << std::endl;
-    }
-
-    if(eConfig.m_fSigma)
-    {
-        std::cout << "Sigma: " << *eConfig.m_fSigma << std::endl;
-    }
-    if(!(*eConfig.m_sImagePath).empty())
-    {
-        std::cout << "ImagePath: " << *eConfig.m_sImagePath << std::endl;
-    }
-};
+        if(eConfig.m_fSigma)
+        {
+            std::cout << "Sigma: " << *eConfig.m_fSigma << std::endl;
+        }
+        if(!(*eConfig.m_sImagePath).empty())
+        {
+            std::cout << "ImagePath: " << *eConfig.m_sImagePath << std::endl;
+        }
+    };
 
 } // namespace
 
@@ -77,7 +77,7 @@ void AlgorithmRunner::prepare()
 {
 
     bool bVisualize = m_eConfig.m_bVisualize;
-    std::cout << "fo :" << std::boolalpha << bVisualize << std::endl;
+    // std::cout << "fo :" << std::boolalpha << bVisualize << std::endl;
 
     switch(*m_eConfig.m_eAlgorithmType)
     {
@@ -116,7 +116,7 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV1(m_eGaussianData, CONSTANTS::DEFAULT_THREADS); },
+                            { ImgProcLab::detail::gaussianV1(m_eGaussianData); },
                             false, 0, 0);
 
                 const auto [iWidth, iHeight] = oImage.size();
@@ -158,7 +158,7 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV2(m_eGaussianData, CONSTANTS::DEFAULT_THREADS); },
+                            { ImgProcLab::detail::gaussianV2(m_eGaussianData); },
                             false, 0, 0);
 
                 const auto [iWidth, iHeight] = oImage.size();
@@ -207,7 +207,7 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV3(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, Separable::TRUE); },
+                            { ImgProcLab::detail::gaussianV3(m_eGaussianData, Separable::TRUE); },
                             false, 0, 0);
                 const auto [iWidth, iHeight] = oImage.size();
 
@@ -257,7 +257,7 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV4(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, Separable::TRUE); },
+                            { ImgProcLab::detail::gaussianV4(m_eGaussianData, Separable::TRUE); },
                             false, 0, 0);
                 const auto [iWidth, iHeight] = oImage.size();
 
@@ -307,7 +307,7 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV5(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, Separable::TRUE); },
+                            { ImgProcLab::detail::gaussianV5(m_eGaussianData, Separable::TRUE); },
                             false, 0, 0);
                 const auto [iWidth, iHeight] = oImage.size();
 
@@ -348,7 +348,7 @@ void AlgorithmRunner::benchmark(Function &&function,
 
 
     float fElapsedTime = executeCuda([&]()
-                                     { function(m_eGaussianData, CONSTANTS::DEFAULT_THREADS, eCase); }, // ;
+                                     { function(m_eGaussianData, eCase); }, // ;
                                      m_eConfig.m_bBenchmark,
                                      m_eConfig.m_iGPUWarmUps,
                                      m_eConfig.m_iIterations);

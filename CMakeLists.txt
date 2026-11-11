@@ -74,7 +74,7 @@ set(TARGET_APPLICATION app/ImgProcLabDemo)
 
 add_subdirectory(${TARGET_APPLICATION})
 
-#option(PROFILE_CUDA "Enable CUDA profilling mode" OFF)
+option(PROFILE_CUDA "Enable CUDA profilling mode" OFF)
 
 if(PROFILE_CUDA AND CMAKE_BUILD_TYPE STREQUAL "Release")
   message(STATUS "Release mode and cuda profiling enabled")

@@ -13,7 +13,7 @@ ColumnLimit: 0
 BreakConstructorInitializers: BeforeColon
 ConstructorInitializerIndentWidth: 0
 PackConstructorInitializers: BinPack
-
+NamespaceIndentation: All
 
 
 
