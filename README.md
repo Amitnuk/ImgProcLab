@@ -336,7 +336,7 @@ These results demonstrate the performance benefits of GPU parallelization and th
 
 The result above was obtained by applying separable filters with constant memory.
 An obvious optimization arises from the fact that the filter coefficients remain unchanged throughout execution.
-In the previous approaches, V1 and V2, the filter coefficients are accessed from global memory, which generally has high latency.
+In the previous approaches, **V1** and **V2**, the filter coefficients are accessed from global memory, which generally has high latency.
 Constant memory is a read-only memory space with a dedicated cache, making it particularly efficient when threads within a warp access the same address, as is the case in our implementation.
 
 
@@ -457,15 +457,15 @@ The overall result is better than the OpenCV CUDA implementation but not better 
 | V5      | 0.059186          |
 
 
-The results obtained show that V5 reduces the average execution time by approximately **90.86%** compared to OpenCV's CPU implementation, 
+The results obtained show that **V5** reduces the average execution time by approximately **90.86%** compared to OpenCV's CPU implementation, 
 but reduces the average execution time by approximately **7.47%** compared to OpenCV's CUDA implementation.
 
 
 ### Gaussian Filter Conclusion 
 
-In this section, the results obtained using different optimization approaches were presented and compared. The results illustrate the power of parallelization, particularly with V1. However, 
-parallelization alone is not enough to achieve optimal performance. V2 improved performance by introducing separable filters, while V3 incorporated constant memory to further reduce memory 
-access latency. V3 proved to be the best-performing approach overall, achieving better results than V5 despite using fewer optimization techniques.
+In this section, the results obtained using different optimization approaches were presented and compared. The results illustrate the power of parallelization, particularly with **V1**. 
+However, parallelization alone is not enough to achieve optimal performance. **V2** improved performance by introducing separable filters, while V3 incorporated constant memory to further reduce 
+memory access latency. **V3** proved to be the best-performing approach overall, achieving better results than **V5** despite using fewer optimization techniques.
 
 I believe that, with further optimizations, all versions from **V2** to **V5** could achieve even better performance than OpenCV's CUDA implementation of the Gaussian filter.
 Using Nsight Compute, memory latency and occupancy were identified as major performance concerns, particularly in **V5**.
