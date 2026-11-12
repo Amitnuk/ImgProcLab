@@ -148,7 +148,8 @@ From the repository root:
 ./run.sh
 ```
 
-The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations V1, V2, V3, V4 and V5 using kernel sizes from 3×3 to 31×31.
+The script automatically cleans previous build artifacts, builds the project in Release mode, and benchmarks Gaussian implementations **V1**, **V2**, **V3**, **V4** and **V5**
+using kernel sizes from **3×3** to **31×31**.
 
 Each configuration runs 10 warmup iterations and 100 measured iterations, with a Gaussian sigma of 1.5.
 
@@ -387,7 +388,8 @@ Shared memory is designed as part of the CUDA device SM (**Streaming Multiproces
 The access of data in shared memory is similar to accessing data to global memory, but since the shared memory resides on the chip, it has a lower latency and higher throughput 
 than the global memory. 
 
-Furthermore, the OpenCV CUDA implementation uses the shared memory approach for the gaussian filter with some other optimizations such multiple output pixels per thread which V4 does not include. 
+Furthermore, the OpenCV CUDA implementation uses the shared memory approach for the gaussian filter with some other optimizations such multiple output pixels per thread which **V4** 
+does not include. 
 The result above shows us that **V4** is competitive with OpenCV CUDA implementation.
 
 For more details on OpenCV's CUDA implementation, refer to the CUDA column filter source [code](https://github.com/opencv/opencv_contrib/blob/4.x/modules/cudafilters/src/cuda/column_filter.hpp).
