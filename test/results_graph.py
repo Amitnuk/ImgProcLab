@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 # 540 720 -----> einstein.jpg
 # 1920 1080 ---> Sunset.jpg
 
-df = pd.read_csv("../app/ImgProcLabDemo/benchmark/results/gaussianV3.csv")
+df = pd.read_csv("app/ImgProcLabDemo/benchmark/results/gaussianV5.csv")
 
-Size = [(453, 340), (532, 532), (597, 335),
+Size = [(453, 340), (597, 335), (532, 532), 
         (540, 720), (1920, 1080)]
 
 averages = []

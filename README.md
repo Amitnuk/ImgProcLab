@@ -159,21 +159,66 @@ Each configuration runs 10 warmup iterations and 100 measured iterations, with a
 ## Results 
 The images used can be found in the `resources` directory.
 
+### Correctness
+
+#### Filter Correctness: Mean Absolute Error (MAE) and Maximum Absolute Error (MAE) 
+
+Before presenting the results, it is important to describe the approach used to evaluate the correctness of the implementations.
+The output of each implemented version is compared pixel by pixel against both OpenCV's CPU and CUDA implementations.
+Two metrics are used for this comparison: **Mean Absolute Error (MAE)** and **Maximum Absolute Error**.
+
+- **Mean Absolute Error (MAE):** Measures the average absolute difference between corresponding pixel values across all image channels.
+- **Maximum Absolute Error:** Measures the largest absolute difference between corresponding pixel values across all image channels.
+
+
+##### Filter Correctness Results
+
+The following results were obtained using the same configuration for all five versions:
+
+- **Image resolution:** 1920×1080
+- **Gaussian kernel size:** 5
+- **Sigma:** 2.5
+
+**Mean Absolute Error (MAE)**
+
+| Version | CPU vs CUDA | ImgProcLab vs CPU | ImgProcLab vs CUDA |
+|---------|-------------|-------------------|--------------------|
+| V1      | 0.00729897  | 0.00729961        | 8.08427e-06        |
+| V2      | 0.00729897  | 0.00729864        | 9.70113e-07        |
+| V3      | 0.00729897  | 0.00729864        | 9.70113e-07        |
+| V4      | 0.00729897  | 0.00729864        | 9.70113e-07        |
+| V5      | 0.00729897  | 0.00729864        | 9.70113e-07        |
+
+**Maximum Absolute Error**
+
+| Version | CPU vs CUDA | ImgProcLab vs CPU | ImgProcLab vs CUDA |
+|---------|-------------|-------------------|--------------------|
+| V1      |      1      |        1          |         1          |
+| V2      |      1      |        1          |         1          |
+| V3      |      1      |        1          |         1          |
+| V4      |      1      |        1          |         1          |
+| V5      |      1      |        1          |         1          |
+
+##### Observations
+
+As shown in the tables, the maximum absolute difference between corresponding pixel values is **1** for all implementations.
+Furthermore, the Mean Absolute Error is very close to zero, indicating that the outputs of all five versions are nearly identical to those produced by OpenCV's CPU and CUDA implementations.
+The results obtained from V1 through V5 demonstrate a very high level of numerical agreement with OpenCV's implementations.
 
 ### Gaussian V1: Naive Approach 
 
 <table>
   <tr>
-    <td><img src="test/plots/V1.0.png" width="600"></td>
-    <td><img src="test/plots/V1.1.png" width="600"></td>
+    <td><img src="reports/graphs/V1.0.png" width="600"></td>
+    <td><img src="reports/graphs/V1.1.png" width="600"></td>
   </tr>
   <tr>
-    <td><img src="test/plots/V1.2.png" width="600"></td>
-    <td><img src="test/plots/V1.3.png" width="600"></td>
+    <td><img src="reports/graphs/V1.2.png" width="600"></td>
+    <td><img src="reports/graphs/V1.3.png" width="600"></td>
   </tr>
   <tr> 
-    <td><img src="test/plots/V1.4.png" width="600"></td>
-    <td><img src="test/plots/V1.5.png" width="600"></td>
+    <td><img src="reports/graphs/V1.4.png" width="600"></td>
+    <td><img src="reports/graphs/V1.5.png" width="600"></td>
   </tr>
 </table>
 
@@ -208,8 +253,8 @@ Bellow the graph comparing, the execution time and average computation time.
 | V1             | 0.506700          |
 
 
-The results obtained show that V1 is approximately 1.27× faster on average than OpenCV's CPU 
-Gaussian filter implementation, but 8.27× slower on average than its CUDA implementation. 
+The results obtained show that V1 is approximately **1.27×** faster on average than OpenCV's CPU 
+Gaussian filter implementation, but **8.27×** slower on average than its CUDA implementation. 
 Despite being a naive approach, one can observe the performance improvement achieved simply 
 through parallelization.
 
@@ -219,16 +264,16 @@ through parallelization.
 
 <table>
   <tr>
-    <td><img src="test/plots/V2.0.png" width="600"></td>
-    <td><img src="test/plots/V2.1.png" width="600"></td>
+    <td><img src="reports/graphs/V2.0.png" width="600"></td>
+    <td><img src="reports/graphs/V2.1.png" width="600"></td>
   </tr>
   <tr>
-    <td><img src="test/plots/V2.2.png" width="600"></td>
-    <td><img src="test/plots/V2.3.png" width="600"></td>
+    <td><img src="reports/graphs/V2.2.png" width="600"></td>
+    <td><img src="reports/graphs/V2.3.png" width="600"></td>
   </tr>
   <tr> 
-    <td><img src="test/plots/V2.4.png" width="600"></td>
-    <td><img src="test/plots/V2.5.png" width="600"></td>
+    <td><img src="reports/graphs/V2.4.png" width="600"></td>
+    <td><img src="reports/graphs/V2.5.png" width="600"></td>
   </tr>
 </table>
 
@@ -236,54 +281,50 @@ through parallelization.
 The result above was obtained by applying separable filters. A separable filter is a filter that can be decomposed into two or more simpler filters. 
 In the case of the separable Gaussian filter, the same result can be obtained by applying a vertical filter followed by a horizontal filter, or vice versa.
 
-As expected, the result is competitive with that obtained using the CUDA implementation of OpenCV. Unlike V1, V2 has a computational complexity of O(n), where n is the kernel size. 
+As we can see, V2 not only has better performance than V1 but also the CUDA implementation of OpenCV with the selected images. 
+Unlike V1, V2 has a computational complexity of O(n), where n is the kernel size. 
 All subsequent versions of the Gaussian filter will use filter separability as their foundation.
 
 </table> 
 
- **Average execution time per image (ms)**
+**Average execution time per image (ms)**
 
 | Image resolution | CPU      | CUDA     | V2       |
 |------------------|----------|----------|----------|
-| 453×340          | 0.267030 | 0.020965 | 0.020403 |
-| 532×532          | 0.429130 | 0.034563 | 0.032190 |
-| 597×335          | 0.315111 | 0.025102 | 0.024668 |
-| 540×720          | 0.499446 | 0.042216 | 0.041801 |
-| 1920×1080        | 1.695293 | 0.196706 | 0.202421 |
+| 453×340          | 0.287248 | 0.020497 | 0.016993 |
+| 532×532          | 0.505921 | 0.033513 | 0.027844 |
+| 597×335          | 0.335010 | 0.024888 | 0.020815 |
+| 540×720          | 0.509607 | 0.042391 | 0.036611 |
+| 1920×1080        | 1.708984 | 0.193626 | 0.174197 |
 
 **Overall average execution time (ms)**
 
 | Version | Average time (ms) |
 |---------|-------------------|
-| CPU     | 0.641202          |
-| CUDA    | 0.063910          |
-| V2      | 0.064297          |
+| CPU     | 0.669354          |
+| CUDA    | 0.062983          |
+| V2      | 0.055292          |
 
 
-
-
-
-The results obtained show that V1 is approximately 89.97% faster on average than OpenCV's CPU 
-Gaussian filter implementation, which is a considerable improvement on V1, but 0.60% slower on average than its CUDA implementation. 
-Now the power of parallelization can be fully appreciated.
-
-
+The results obtained, show that V2 achieves an average execution time **91.74% lower** than OpenCV's CPU Gaussian filter implementation 
+and **12.21% lower** than its CUDA implementation. 
+These results demonstrate the performance benefits of GPU parallelization and the effectiveness of separable convolution.
 
 
 ### Gaussian V3: Separable filters with constant memory
 
 <table>
   <tr>
-    <td><img src="test/plots/V3.0.png" width="600"></td>
-    <td><img src="test/plots/V3.1.png" width="600"></td>
+    <td><img src="reports/graphs/V3.0.png" width="600"></td>
+    <td><img src="reports/graphs/V3.1.png" width="600"></td>
   </tr>
   <tr>
-    <td><img src="test/plots/V3.2.png" width="600"></td>
-    <td><img src="test/plots/V3.3.png" width="600"></td>
+    <td><img src="reports/graphs/V3.2.png" width="600"></td>
+    <td><img src="reports/graphs/V3.3.png" width="600"></td>
   </tr>
   <tr> 
-    <td><img src="test/plots/V3.4.png" width="600"></td>
-    <td><img src="test/plots/V3.5.png" width="600"></td>
+    <td><img src="reports/graphs/V3.4.png" width="600"></td>
+    <td><img src="reports/graphs/V3.5.png" width="600"></td>
   </tr>
 </table>
 
@@ -297,30 +338,128 @@ Constant memory is a read-only memory space with a dedicated cache, making it pa
 
 | Image resolution | CPU      | CUDA     | V3       |
 |------------------|----------|----------|----------|
-| 453×340          | 0.268790 | 0.020493 | 0.019336 |
-| 532×532          | 0.449633 | 0.033178 | 0.030482 |
-| 597×335          | 0.331683 | 0.025091 | 0.023328 |
-| 540×720          | 0.487515 | 0.042693 | 0.040084 |
-| 1920×1080        | 1.692974 | 0.196488 | 0.193848 |
+| 453×340          | 0.280530 | 0.020500 | 0.015732 |
+| 532×532          | 0.469630 | 0.033939 | 0.024597 |
+| 597×335          | 0.327891 | 0.025094 | 0.018275 |
+| 540×720          | 0.499284 | 0.043300 | 0.031499 |
+| 1920×1080        | 1.736945 | 0.195336 | 0.149522 |
 
 **Overall average execution time (ms)**
 
 | Version | Average time (ms) |
 |---------|-------------------|
-| CPU     | 0.646119          |
-| CUDA    | 0.063588          |
-| V3      | 0.061415          |
+| CPU     | 0.662856          |
+| CUDA    | 0.063634          |
+| V3      | 0.047925          |
 
 
-The results obtained show that V3 reduces the average execution time by approximately 90.49% compared to OpenCV's CPU Gaussian filter implementation, which represents a considerable improvement.
-Furthermore, V3 reduces the average execution time by approximately 3.42% compared to OpenCV's CUDA implementation.
-Although V3 outperforms OpenCV's CUDA implementation, the performance improvement remains relatively small. 
-To better understand the kernel's behavior and identify potential bottlenecks, we will use NVIDIA Nsight Compute (NCU) to analyze its execution.
-The profiling results will help determine whether further optimizations are worthwhile. 
+The results obtained show that V3 reduces the average execution time by approximately **92.76%** compared to OpenCV's CPU Gaussian filter implementation, 
+which represents a considerable improvement.
+Furthermore, V3 reduces the average execution time by approximately **24.68%** compared to OpenCV's CUDA implementation.
 
 
-### Profiling with Nsight Compute (NCU)
 
+### Gaussian V4: Separable filters with shared memory
+
+<table>
+  <tr>
+    <td><img src="reports/graphs/V4.0.png" width="600"></td>
+    <td><img src="reports/graphs/V4.1.png" width="600"></td>
+  </tr>
+  <tr>
+    <td><img src="reports/graphs/V4.2.png" width="600"></td>
+    <td><img src="reports/graphs/V4.3.png" width="600"></td>
+  </tr>
+  <tr> 
+    <td><img src="reports/graphs/V4.4.png" width="600"></td>
+    <td><img src="reports/graphs/V4.5.png" width="600"></td>
+  </tr>
+</table>
+
+The result above was obtained by applying separable filters with shared memory.
+Shared memory is designed as part of the CUDA device SM (**Streaming Multiprocessor**), which can be seen as the equivalent of CPU core.
+The access of data in shared memory is similar to accessing data to global memory, but since the shared memory resides on the chip, it has a lower latency and higher throughput 
+than the global memory. 
+
+Furthermore, the OpenCV CUDA implementation uses the shared memory approach for the gaussian filter with some other optimizations such multiple output pixels per thread which V4 does not include. 
+The result above shows us that V4 is competitive with OpenCV CUDA implementation.
+
+For more details on OpenCV's CUDA implementation, refer to the CUDA column filter source [code](https://github.com/opencv/opencv_contrib/blob/4.x/modules/cudafilters/src/cuda/column_filter.hpp).
+
+**Average execution time per image (ms)**
+
+| Image resolution | CPU      | CUDA     | V4       |
+|------------------|----------|----------|----------|
+| 453×340          | 0.326418 | 0.021712 | 0.022046 |
+| 532×532          | 0.441967 | 0.033617 | 0.034727 |
+| 597×335          | 0.346635 | 0.024932 | 0.025859 |
+| 540×720          | 0.495365 | 0.042628 | 0.046839 |
+| 1920×1080        | 1.687100 | 0.196126 | 0.225980 |
+
+**Overall average execution time (ms)**
+
+| Version | Average time (ms) |
+|---------|-------------------|
+| CPU     | 0.659497          |
+| CUDA    | 0.063803          |
+| V4      | 0.071090          |
+
+
+The results obtained show that V4 reduces the average execution time by approximately **89.22%** compared to OpenCV's CPU implementation, 
+but increases the average execution time by approximately **11.42%** compared to OpenCV's CUDA Gaussian filter implementation.
+
+
+### Gaussian V5: Separable filters with constant memory and shared memory
+
+<table>
+  <tr>
+    <td><img src="reports/graphs/V5.0.png" width="600"></td>
+    <td><img src="reports/graphs/V5.1.png" width="600"></td>
+  </tr>
+  <tr>
+    <td><img src="reports/graphs/V5.2.png" width="600"></td>
+    <td><img src="reports/graphs/V5.3.png" width="600"></td>
+  </tr>
+  <tr> 
+    <td><img src="reports/graphs/V5.4.png" width="600"></td>
+    <td><img src="reports/graphs/V5.5.png" width="600"></td>
+  </tr>
+</table>
+
+
+The result above was obtained by applying separable filters with shared memory and constant memory.
+The overall result is better than the OpenCV CUDA implementation but not better than V3.
+**Average execution time per image (ms)**
+
+| Image resolution | CPU      | CUDA     | V5       |
+|------------------|----------|----------|----------|
+| 453×340          | 0.287598 | 0.020575 | 0.019065 |
+| 532×532          | 0.444237 | 0.033968 | 0.029530 |
+| 597×335          | 0.337051 | 0.024624 | 0.022027 |
+| 540×720          | 0.495823 | 0.042546 | 0.038996 |
+| 1920×1080        | 1.674898 | 0.198119 | 0.186311 |
+
+**Overall average execution time (ms)**
+
+| Version | Average time (ms) |
+|---------|-------------------|
+| CPU     | 0.647921          |
+| CUDA    | 0.063966          |
+| V5      | 0.059186          |
+
+
+The results obtained show that V5 reduces the average execution time by approximately **90.86%** compared to OpenCV's CPU implementation, 
+but reduces the average execution time by approximately **7.47%** compared to OpenCV's CUDA implementation.
+
+
+### Gaussian Filter Conclusion 
+
+In this section, the results obtained using different optimization approaches were presented and compared. The results illustrate the power of parallelization, particularly with V1. However, 
+parallelization alone is not enough to achieve optimal performance. V2 improved performance by introducing separable filters, while V3 incorporated constant memory to further reduce memory 
+access latency. V3 proved to be the best-performing approach overall, achieving better results than V5 despite using fewer optimization techniques.
+
+I believe that, with further optimizations, all versions from V2 to V5 could achieve better performance than OpenCV's CUDA implementation of the Gaussian filter.
+Using Nsight Compute, memory latency and occupancy were identified as major performance concerns, particularly in V5.
 
 ## Development Status
 
