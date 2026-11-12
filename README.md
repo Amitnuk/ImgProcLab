@@ -165,6 +165,7 @@ The images used can be found in the `resources` directory.
 
 Before presenting the results, it is important to describe the approach used to evaluate the correctness of the implementations.
 The output of each implemented version is compared pixel by pixel against both OpenCV's CPU and CUDA implementations.
+
 Two metrics are used for this comparison: **Mean Absolute Error (MAE)** and **Maximum Absolute Error**.
 
 - **Mean Absolute Error (MAE):** Measures the average absolute difference between corresponding pixel values across all image channels.
