@@ -473,3 +473,12 @@ The project currently prioritizes:
 5. Maintaining a clear and reusable C++ project structure.
 
 Further documentation, benchmark results, and implementation details will be added as development progresses.
+
+## Personal Notes (TODO)
+
+1. Automated testing with CTest.
+2. Robust CUDA error handling and Compute Sanitizer checks.
+3. Clean CMake configuration and reproducible builds.
+4. Clear internal C++ architecture and resource ownership.
+5. GitHub Actions CI and polished documentation.
+
