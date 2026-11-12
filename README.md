@@ -205,7 +205,7 @@ The following results were obtained using the same configuration for all five ve
 
 As shown in the tables, the maximum absolute difference between corresponding pixel values is **1** for all implementations.
 Furthermore, the Mean Absolute Error is very close to zero, indicating that the outputs of all five versions are nearly identical to those produced by OpenCV's CPU and CUDA implementations.
-The results obtained from V1 through **V5** demonstrate a very high level of numerical agreement with OpenCV's implementations.
+The results obtained from **V1** through **V5** demonstrate a very high level of numerical agreement with OpenCV's implementations.
 
 
 ### Gaussian V1: Naive Approach 
@@ -230,7 +230,7 @@ The results obtained from V1 through **V5** demonstrate a very high level of num
 The images above show the results obtained using a Gaussian filter on five images of different sizes, with 15 different kernel sizes and a sigma value of 1.5.
 
 The approach used is a non-optimized (naive) implementation. The filtering operation, i.e., smoothing, is applied in both image dimensions within the same nested loop, resulting in an algorithm 
-with O(n²) complexity.
+with **O(n²)** complexity.
 
 This **O(n²)** behavior can be observed in the graphs, where the trend becomes more pronounced as the kernel size increases.
 
@@ -286,8 +286,8 @@ through parallelization.
 The result above was obtained by applying separable filters. A separable filter is a filter that can be decomposed into two or more simpler filters. 
 In the case of the separable Gaussian filter, the same result can be obtained by applying a vertical filter followed by a horizontal filter, or vice versa.
 
-As we can see, **V2** not only has better performance than V1 but also the CUDA implementation of OpenCV with the selected images. 
-Unlike **V1**, **V2** has a computational complexity of **O(n)**, where n is the kernel size. 
+As we can see, **V2** not only has better performance than **V1** but also the CUDA implementation of OpenCV with the selected images. 
+Unlike **V1**, **V2** has a computational complexity of **O(n)**, where **n** is the kernel size. 
 All subsequent versions of the Gaussian filter will use filter separability as their foundation.
 
 
@@ -360,9 +360,9 @@ Constant memory is a read-only memory space with a dedicated cache, making it pa
 | V3      | 0.047925          |
 
 
-The results obtained show that **V3** reduces the average execution time by approximately **92.76%** compared to OpenCV's CPU Gaussian filter implementation, 
+The results obtained show that **V3** reduces the average execution time by approximately **92.76% lower** compared to OpenCV's CPU Gaussian filter implementation, 
 which represents a considerable improvement.
-Furthermore, **V3** reduces the average execution time by approximately **24.68%** compared to OpenCV's CUDA implementation.
+Furthermore, **V3** reduces the average execution time by approximately **24.68% lower** compared to OpenCV's CUDA implementation.
 
 
 
@@ -414,8 +414,8 @@ For more details on OpenCV's CUDA implementation, refer to the CUDA column filte
 | V4      | 0.071090          |
 
 
-The results obtained show that **V4** reduces the average execution time by approximately **89.22%** compared to OpenCV's CPU implementation, 
-but increases the average execution time by approximately **11.42%** compared to OpenCV's CUDA Gaussian filter implementation.
+The results obtained show that **V4** reduces the average execution time by approximately **89.22% lower** compared to OpenCV's CPU implementation, 
+but increases the average execution time by approximately **11.42% higher** compared to OpenCV's CUDA Gaussian filter implementation.
 
 
 ### Gaussian V5: Separable filters with constant memory and shared memory
@@ -459,8 +459,8 @@ The overall result is better than the OpenCV CUDA implementation but not better 
 | V5      | 0.059186          |
 
 
-The results obtained show that **V5** reduces the average execution time by approximately **90.86%** compared to OpenCV's CPU implementation, 
-but reduces the average execution time by approximately **7.47%** compared to OpenCV's CUDA implementation.
+The results obtained show that **V5** reduces the average execution time by approximately **90.86% lower** compared to OpenCV's CPU implementation, 
+but reduces the average execution time by approximately **7.47% lower** compared to OpenCV's CUDA implementation.
 
 
 ### Gaussian Filter Conclusion 
