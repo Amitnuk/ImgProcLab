@@ -1,37 +1,38 @@
 #pragma once
 #include "ArgumentParser.hpp"
-#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
-#include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "ImgProc/cuda/basicOperations/colorConversion/iplCuda.hpp"
+#include "ImgProc/cuda/basicOperations/colorConversion/iplData.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianCuda.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianData.hpp"
 #include "common/GaussianUtils.hpp"
 
 using namespace ImgProcLab::detail;
 
-namespace cv 
+namespace cv
 {
-  class Mat;
+    class Mat;
 }
 
 class AlgorithmRunner
 {
-    public :
-        AlgorithmRunner() = delete;
-        ~AlgorithmRunner() = default;
-        explicit AlgorithmRunner(const AlgorithmConfig& eConfig) :m_eConfig(eConfig) {}
-        void run();
+  public:
+    AlgorithmRunner() = delete;
+    ~AlgorithmRunner() = default;
+    explicit AlgorithmRunner(const AlgorithmConfig& eConfig) : m_eConfig(eConfig) {}
+    void run();
 
 
-    private :
-        void prepare();
-        template<typename Function>
-        void benchmark(Function&& function, 
-                       const cv::Mat& oImage,
-                       const std::string& sAlgorithm="-",
-                       const std::string& sVersion="-",
-                       bool bVisualize = false,
-                       Separable eCase = Separable::FALSE);
+  private:
+    void prepare();
+    template <typename Function>
+    void benchmark(Function&& function,
+                   const cv::Mat& oImage,
+                   const std::string& sAlgorithm = "-",
+                   const std::string& sVersion = "-",
+                   bool bVisualize = false,
+                   Separable eCase = Separable::FALSE);
 
-        const AlgorithmConfig& m_eConfig;
-        GaussianData m_eGaussianData;
-       
-
+    const AlgorithmConfig& m_eConfig;
+    GaussianData m_eGaussianData;
+    ColorConversion m_eColorConversionData;
 };

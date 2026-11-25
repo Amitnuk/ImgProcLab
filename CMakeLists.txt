@@ -37,15 +37,21 @@ add_library(ImgProcLab STATIC
 			  ${CMAKE_CURRENT_SOURCE_DIR}/src/filters/GaussianFilter.cpp
 			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/filters/GaussianFilter.hpp
 
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV1.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV2.cu
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV3.cu
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV4.cu
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianV5.cu
-			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/gaussian/GaussianPrepare.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianV1.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianV2.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianV3.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianV4.cu
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianV5.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/filters/gaussian/GaussianPrepare.cu
 
-			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianCuda.hpp
-			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/gaussian/GaussianData.hpp
+
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/basicOperations/TransformColor.cpp
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/basicOperations/colorConversion/prepareGrayConversion.cu
+			  ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/basicOperations/colorConversion/GrayConversion.cu
+
+
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/filters/gaussian/GaussianCuda.hpp
+			  #${CMAKE_CURRENT_SOURCE_DIR}/include/ImgProc/cuda/filters/gaussian/GaussianData.hpp
 
 			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaUtils.hpp
 			  #${CMAKE_CURRENT_SOURCE_DIR}/include/cuda/common/CudaBuffer.hpp
@@ -77,7 +83,7 @@ add_subdirectory(${TARGET_APPLICATION})
 option(PROFILE_CUDA "Enable CUDA profilling mode" OFF)
 
 if(PROFILE_CUDA AND CMAKE_BUILD_TYPE STREQUAL "Release")
-  message(STATUS "Release mode and cuda profiling enabled")
+  message(STATUS "Release mode and cuda/filters profiling enabled")
   target_compile_definitions(ImgProcLab PUBLIC PROFILE_CUDA)
   target_compile_options(ImgProcLab PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)
 
@@ -94,7 +100,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
   
 endif()
 
-#sudo /usr/local/cuda-13.4/bin/ncu \
+#sudo /usr/local/cuda/filters-13.4/bin/ncu \
 #    --set full \
 #    --kernel-name regex:GaussianFilterKernel \
 #    --launch-skip 10 \
@@ -102,4 +108,4 @@ endif()
 #    --export gaussian_full \
 #    ./ImgProcLab \
 #    /home/kuntima/Workspace/Lab/OpenCV/images/model.png
-#/usr/local/cuda-13.4/bin/ncu-ui gaussian_full.ncu-repz
+#/usr/local/cuda/filters-13.4/bin/ncu-ui gaussian_full.ncu-repz

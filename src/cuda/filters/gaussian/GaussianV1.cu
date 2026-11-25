@@ -1,5 +1,5 @@
-#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
-#include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianCuda.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianData.hpp"
 #include "common/ImgProcLabUtils.hpp"
 #include "cuda/common/CudaExecutionContext.hpp"
 #include <stdexcept>
@@ -10,7 +10,7 @@ namespace ImgProcLab
     {
         constexpr int CHANNELS = 3;
 
-        __global__ void GaussianFilterKernel(const uchar *pIn, uchar *pOut, const float *pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
+        __global__ void GaussianFilterKernel(const uchar* pIn, uchar* pOut, const float* pKernel, int iHeight, int iWidth, const std::size_t iKernelSize = 3)
         {
             int col = threadIdx.x + blockIdx.x * blockDim.x;
             int row = threadIdx.y + blockIdx.y * blockDim.y;
@@ -31,7 +31,7 @@ namespace ImgProcLab
                             int iImageIndex = (iRow * iWidth + iCol) * CHANNELS;
                             int iKernelIndex = (y + half) * iKernelSize + (x + half);
 
-                            const float &fKernel = pKernel[iKernelIndex];
+                            const float& fKernel = pKernel[iKernelIndex];
                             vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fKernel;
                             vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fKernel;
                             vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fKernel;
@@ -47,13 +47,13 @@ namespace ImgProcLab
         }
 
 
-        void gaussianV1(GaussianData &eData, Separable eCase /*=Separable::FALSE*/)
+        void gaussianV1(GaussianData& eData, Separable eCase /*=Separable::FALSE*/)
         {
 
-            CudaExecutionContext &eCudaContext = eData.m_eCudaExecutionContext;
+            CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;
 
-            const int &iHeight = eCudaContext.m_iHeight;
-            const int &iWidth = eCudaContext.m_iWidth;
+            const int& iHeight = eCudaContext.m_iHeight;
+            const int& iWidth = eCudaContext.m_iWidth;
 
             const int iGridDimX = (iWidth + CONSTANTS::BLOCK_DIM_X - 1) / CONSTANTS::BLOCK_DIM_X;
             const int iGridDimY = (iHeight + CONSTANTS::BLOCK_DIM_Y - 1) / CONSTANTS::BLOCK_DIM_Y;

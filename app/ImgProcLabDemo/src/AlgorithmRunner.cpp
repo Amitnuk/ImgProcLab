@@ -1,25 +1,30 @@
 #include "AlgorithmRunner.hpp"
+#include "ArgumentParser.hpp"
 #include "BenchmarkWriter.hpp"
+#include "ImgProc/basicOperations/TransformColor.hpp"
 #include "common/GaussianUtils.hpp"
 #include "config.h"
-#include <ImgProc/cuda/gaussian/GaussianCuda.hpp>
-#include <ImgProc/cuda/gaussian/GaussianData.hpp>
+#include <ImgProc/cuda/basicOperations/colorConversion/iplCuda.hpp>
+#include <ImgProc/cuda/basicOperations/colorConversion/iplData.hpp>
+#include <ImgProc/cuda/filters/gaussian/GaussianCuda.hpp>
+#include <ImgProc/cuda/filters/gaussian/GaussianData.hpp>
 #include <ImgProc/filters/GaussianFilter.hpp>
 #include <common/ImgProcLabUtils.hpp>
+#include <cstddef>
 #include <cuda/common/CudaExecution.hpp>
 #include <cuda/common/OpenCVExecution.hpp>
-#include <ios>
-#include <memory>
-#include <opencv2/core/hal/interface.h>
+#include <exception>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/cudafilters.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <stdexcept>
+#include <utility>
 
 
 namespace
 {
-    void compareImage(const cv::Mat &oAtual, const cv::Mat &oReference)
+    void compareImage(const cv::Mat& oAtual, const cv::Mat& oReference)
     {
         if(oAtual.size() != oReference.size() || oAtual.type() != oReference.type())
         {
@@ -44,7 +49,7 @@ namespace
         std::cout << "Maximum Absolute Error: " << fMaxError << std::endl;
     }
 
-    auto displayInfo = [](const AlgorithmConfig &eConfig)
+    auto displayInfo = [](const AlgorithmConfig& eConfig)
     {
         if(eConfig.m_iKernelSize)
         {
@@ -81,34 +86,307 @@ void AlgorithmRunner::prepare()
 
     switch(*m_eConfig.m_eAlgorithmType)
     {
-    case Algorithm::GaussianFilter:
-    {
-        switch(*m_eConfig.m_eVersion)
+        case Algorithm::GaussianFilter:
         {
-        case Version::V1:
+            switch(*m_eConfig.m_eVersion)
+            {
+                case Version::V1:
+                {
+                    std::cout << "Executing GaussianFilter V1" << std::endl;
+                    std::cout << "Naive 2D Convolutions" << std::endl;
+                    std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+                    ::displayInfo(m_eConfig);
+                    cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+                    ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage,
+                                                                       *m_eConfig.m_iKernelSize,
+                                                                       *m_eConfig.m_fSigma,
+                                                                       ImgProcLab::GaussianVersion::V1);
+
+                    m_eGaussianData = oGaussianFilter.getGaussianData();
+
+                    // TODO:
+                    //  oGaussianFilter..getGaussianData() performs a move so oGaussianFilter does not have it anymore, should allow copy, Array should be copiable
+
+
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        benchmark([&]()
+                                  { ImgProcLab::detail::gaussianV1(m_eGaussianData, Separable::FALSE); },
+                                  oImage,
+                                  "gaussian",
+                                  "V1",
+                                  bVisualize);
+                    }
+                    else if(bVisualize)
+                    {
+
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV1(m_eGaussianData, Separable::FALSE); },
+                                    false, 0, 0);
+
+                        const auto [iWidth, iHeight] = oImage.size();
+                        cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+                        m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                        cv::imshow("Original Image", oImage);
+                        cv::imshow("Gaussian Blurred Image", oOutputImage);
+                        cv::waitKey(0);
+                    }
+                    else
+                    {
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV1(m_eGaussianData, Separable::FALSE); },
+                                    false, 0, 0);
+                    }
+                    break;
+                }
+                case Version::V2:
+                {
+                    std::cout << "Executing GaussianFilter V2" << std::endl;
+                    std::cout << "Separable 1D Convolution" << std::endl;
+                    std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+                    ::displayInfo(m_eConfig);
+
+                    cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+                    ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage,
+                                                                       *m_eConfig.m_iKernelSize,
+                                                                       *m_eConfig.m_fSigma,
+                                                                       ImgProcLab::GaussianVersion::V2);
+
+                    m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
+
+
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        benchmark([&]()
+                                  { ImgProcLab::detail::gaussianV2(m_eGaussianData, Separable::TRUE); },
+                                  oImage,
+                                  "gaussian",
+                                  "V2",
+                                  bVisualize);
+                    }
+                    else if(bVisualize)
+                    {
+
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV2(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+
+                        const auto [iWidth, iHeight] = oImage.size();
+                        cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+
+                        m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                        cv::imshow("Original Image", oImage);
+                        cv::imshow("Gaussian Blurred Image", oOutputImage);
+                        cv::waitKey(0);
+                    }
+                    else
+                    {
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV2(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                    }
+
+
+                    break;
+                }
+                case Version::V3:
+                {
+
+                    std::cout << "Executing GaussianFilter V3" << std::endl;
+                    std::cout << "Separable 1D Convolution With Constant Memory" << std::endl;
+                    std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+                    ::displayInfo(m_eConfig);
+
+                    cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+
+                    ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
+                                                                       *m_eConfig.m_iKernelSize,
+                                                                       *m_eConfig.m_fSigma,
+                                                                       ImgProcLab::GaussianVersion::V3,
+                                                                       Separable::TRUE,
+                                                                       METHOD::CONSTANT);
+
+                    m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
+
+
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        benchmark([&]()
+                                  { ImgProcLab::detail::gaussianV3(m_eGaussianData, Separable::TRUE); },
+                                  oImage,
+                                  "gaussian",
+                                  "V3",
+                                  bVisualize,
+                                  Separable::TRUE);
+                    }
+                    else if(bVisualize)
+                    {
+
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV3(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                        const auto [iWidth, iHeight] = oImage.size();
+
+                        cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+
+                        m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                        cv::imshow("Original Image", oImage);
+                        cv::imshow("Gaussian Blurred Image", oOutputImage);
+                        cv::waitKey(0);
+                    }
+                    else
+                    {
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV3(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                    }
+
+
+                    break;
+                }
+                case Version::V4:
+                {
+
+                    std::cout << "Executing GaussianFilter V4" << std::endl;
+                    std::cout << "Separable 1D Convolution With Shared Memory" << std::endl;
+                    std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+                    ::displayInfo(m_eConfig);
+
+                    cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+
+                    ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
+                                                                       *m_eConfig.m_iKernelSize,
+                                                                       *m_eConfig.m_fSigma,
+                                                                       ImgProcLab::GaussianVersion::V4,
+                                                                       Separable::TRUE,
+                                                                       METHOD::SHARED);
+
+                    m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
+
+
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        benchmark([&]()
+                                  { ImgProcLab::detail::gaussianV4(m_eGaussianData, Separable::TRUE); },
+                                  oImage,
+                                  "gaussian",
+                                  "V4",
+                                  bVisualize,
+                                  Separable::TRUE);
+                    }
+                    else if(bVisualize)
+                    {
+
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV4(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                        const auto [iWidth, iHeight] = oImage.size();
+
+                        cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+
+                        m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                        cv::imshow("Original Image", oImage);
+                        cv::imshow("Gaussian Blurred Image", oOutputImage);
+                        cv::waitKey(0);
+                    }
+                    else
+                    {
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV4(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                    }
+
+                    break;
+                }
+                case Version::V5:
+                {
+
+                    std::cout << "Executing GaussianFilter V5" << std::endl;
+                    std::cout << "Separable 1D Convolution With Constant and Shared Memory" << std::endl;
+                    std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+                    ::displayInfo(m_eConfig);
+
+                    cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
+
+                    ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
+                                                                       *m_eConfig.m_iKernelSize,
+                                                                       *m_eConfig.m_fSigma,
+                                                                       ImgProcLab::GaussianVersion::V5,
+                                                                       Separable::TRUE,
+                                                                       METHOD::CONSTANT);
+
+                    m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
+
+
+                    if(m_eConfig.m_bBenchmark)
+                    {
+                        benchmark([&]()
+                                  { ImgProcLab::detail::gaussianV5(m_eGaussianData, Separable::TRUE); },
+                                  oImage,
+                                  "gaussian",
+                                  "V5",
+                                  bVisualize,
+                                  Separable::TRUE);
+                    }
+                    else if(bVisualize)
+                    {
+
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV5(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                        const auto [iWidth, iHeight] = oImage.size();
+
+                        cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
+
+                        m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+
+                        cv::imshow("Original Image", oImage);
+                        cv::imshow("Gaussian Blurred Image", oOutputImage);
+                        cv::waitKey(0);
+                    }
+                    else
+                    {
+                        executeCuda([&]()
+                                    { ImgProcLab::detail::gaussianV5(m_eGaussianData, Separable::TRUE); },
+                                    false, 0, 0);
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    throw std::invalid_argument("[ERROR]: Executing GaussianFilter with Unknown Version");
+                }
+                break;
+            }
+            break;
+        }
+        case Algorithm::Grayscale:
         {
-            std::cout << "Executing GaussianFilter V1" << std::endl;
-            std::cout << "Naive 2D Convolutions" << std::endl;
-            std::cout << "Gaussian Kernel Launcher" << std::endl;
+
+            std::cout << "Gray Conversion Launcher" << std::endl;
 
             ::displayInfo(m_eConfig);
             cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage,
-                                                               *m_eConfig.m_iKernelSize,
-                                                               *m_eConfig.m_fSigma,
-                                                               ImgProcLab::GaussianVersion::V1);
+            ImgProcLab::basicOps::rgb2gray oGray(oImage);
 
-            m_eGaussianData = oGaussianFilter.getGaussianData();
-
-            // TODO:
-            //  oGaussianFilter..getGaussianData() performs a move so oGaussianFilter does not have it anymore, should allow copy, Array should be copiable
-
+            m_eColorConversionData = oGray.getColorConversionData();
 
             if(m_eConfig.m_bBenchmark)
             {
-                benchmark(ImgProcLab::detail::gaussianV1,
+                benchmark([&]()
+                          { ImgProcLab::detail::iplRGB2GRAY(m_eColorConversionData, Separable::FALSE); },
                           oImage,
-                          "gaussian",
+                          "gray",
                           "V1",
                           bVisualize);
             }
@@ -116,239 +394,44 @@ void AlgorithmRunner::prepare()
             {
 
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV1(m_eGaussianData); },
+                            { ImgProcLab::detail::iplRGB2GRAY(m_eColorConversionData, Separable::FALSE); }, //
                             false, 0, 0);
 
                 const auto [iWidth, iHeight] = oImage.size();
-                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
-                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
+                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC1);
+                m_eColorConversionData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
 
                 cv::imshow("Original Image", oImage);
                 cv::imshow("Gaussian Blurred Image", oOutputImage);
                 cv::waitKey(0);
             }
-            break;
-        }
-        case Version::V2:
-        {
-            std::cout << "Executing GaussianFilter V2" << std::endl;
-            std::cout << "Separable 1D Convolution" << std::endl;
-            std::cout << "Gaussian Kernel Launcher" << std::endl;
-
-            ::displayInfo(m_eConfig);
-
-            cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage,
-                                                               *m_eConfig.m_iKernelSize,
-                                                               *m_eConfig.m_fSigma,
-                                                               ImgProcLab::GaussianVersion::V2);
-
-            m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
-
-
-            if(m_eConfig.m_bBenchmark)
+            else
             {
-                benchmark(ImgProcLab::detail::gaussianV2,
-                          oImage,
-                          "gaussian",
-                          "V2",
-                          bVisualize);
-            }
-            else if(bVisualize)
-            {
-
                 executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV2(m_eGaussianData); },
+                            { ImgProcLab::detail::iplRGB2GRAY(m_eColorConversionData, Separable::FALSE); },
                             false, 0, 0);
-
-                const auto [iWidth, iHeight] = oImage.size();
-                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
-
-                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
-
-                cv::imshow("Original Image", oImage);
-                cv::imshow("Gaussian Blurred Image", oOutputImage);
-                cv::waitKey(0);
-            }
-
-            break;
-        }
-        case Version::V3:
-        {
-
-            std::cout << "Executing GaussianFilter V3" << std::endl;
-            std::cout << "Separable 1D Convolution With Constant Memory" << std::endl;
-            std::cout << "Gaussian Kernel Launcher" << std::endl;
-
-            ::displayInfo(m_eConfig);
-
-            cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-
-            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
-                                                               *m_eConfig.m_iKernelSize,
-                                                               *m_eConfig.m_fSigma,
-                                                               ImgProcLab::GaussianVersion::V3,
-                                                               Separable::TRUE,
-                                                               METHOD::CONSTANT);
-
-            m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
-
-
-            if(m_eConfig.m_bBenchmark)
-            {
-                benchmark(ImgProcLab::detail::gaussianV3,
-                          oImage,
-                          "gaussian",
-                          "V3",
-                          bVisualize,
-                          Separable::TRUE);
-            }
-            else if(bVisualize)
-            {
-
-                executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV3(m_eGaussianData, Separable::TRUE); },
-                            false, 0, 0);
-                const auto [iWidth, iHeight] = oImage.size();
-
-                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
-
-                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
-
-                cv::imshow("Original Image", oImage);
-                cv::imshow("Gaussian Blurred Image", oOutputImage);
-                cv::waitKey(0);
-            }
-
-
-            break;
-        }
-        case Version::V4:
-        {
-
-            std::cout << "Executing GaussianFilter V4" << std::endl;
-            std::cout << "Separable 1D Convolution With Shared Memory" << std::endl;
-            std::cout << "Gaussian Kernel Launcher" << std::endl;
-
-            ::displayInfo(m_eConfig);
-
-            cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-
-            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
-                                                               *m_eConfig.m_iKernelSize,
-                                                               *m_eConfig.m_fSigma,
-                                                               ImgProcLab::GaussianVersion::V4,
-                                                               Separable::TRUE,
-                                                               METHOD::SHARED);
-
-            m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
-
-
-            if(m_eConfig.m_bBenchmark)
-            {
-                benchmark(ImgProcLab::detail::gaussianV4,
-                          oImage,
-                          "gaussian",
-                          "V4",
-                          bVisualize,
-                          Separable::TRUE);
-            }
-            else if(bVisualize)
-            {
-
-                executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV4(m_eGaussianData, Separable::TRUE); },
-                            false, 0, 0);
-                const auto [iWidth, iHeight] = oImage.size();
-
-                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
-
-                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
-
-                cv::imshow("Original Image", oImage);
-                cv::imshow("Gaussian Blurred Image", oOutputImage);
-                cv::waitKey(0);
-            }
-
-
-            break;
-        }
-        case Version::V5:
-        {
-
-            std::cout << "Executing GaussianFilter V5" << std::endl;
-            std::cout << "Separable 1D Convolution With Constant and Shared Memory" << std::endl;
-            std::cout << "Gaussian Kernel Launcher" << std::endl;
-
-            ::displayInfo(m_eConfig);
-
-            cv::Mat oImage = cv::imread(std::string(*m_eConfig.m_sImagePath));
-
-            ImgProcLab::Filter::GaussianFilter oGaussianFilter(oImage, //
-                                                               *m_eConfig.m_iKernelSize,
-                                                               *m_eConfig.m_fSigma,
-                                                               ImgProcLab::GaussianVersion::V5,
-                                                               Separable::TRUE,
-                                                               METHOD::CONSTANT);
-
-            m_eGaussianData = std::move(oGaussianFilter.getGaussianData());
-
-
-            if(m_eConfig.m_bBenchmark)
-            {
-                benchmark(ImgProcLab::detail::gaussianV5,
-                          oImage,
-                          "gaussian",
-                          "V5",
-                          bVisualize,
-                          Separable::TRUE);
-            }
-            else if(bVisualize)
-            {
-
-                executeCuda([&]()
-                            { ImgProcLab::detail::gaussianV5(m_eGaussianData, Separable::TRUE); },
-                            false, 0, 0);
-                const auto [iWidth, iHeight] = oImage.size();
-
-                cv::Mat oOutputImage = cv::Mat(iHeight, iWidth, CV_8UC3);
-
-                m_eGaussianData.m_eCudaExecutionContext.m_oDeviceOutputs.copyFromDevice(oOutputImage.data);
-
-                cv::imshow("Original Image", oImage);
-                cv::imshow("Gaussian Blurred Image", oOutputImage);
-                cv::waitKey(0);
             }
             break;
         }
         default:
         {
-            throw std::invalid_argument("[ERROR]: Executing GaussianFilter with Unknown Version");
+            throw std::invalid_argument("Executing an Unknown Algorithm");
         }
-        break;
-        }
-        break;
-    }
-    default:
-    {
-        throw std::invalid_argument("Executing an Unknown Algorithm");
-    }
     }
 }
 
 // TODO: make this function filter/algorithms agnostic, right now only works for Gaussian Blur
 template <typename Function>
-void AlgorithmRunner::benchmark(Function &&function,
-                                const cv::Mat &oImage,
-                                const std::string &sAlgorithm,
-                                const std::string &sVersion,
+void AlgorithmRunner::benchmark(Function&& function,
+                                const cv::Mat& oImage,
+                                const std::string& sAlgorithm,
+                                const std::string& sVersion,
                                 bool bVisualize /*= true*/,
                                 Separable eCase /*= Separable::FALSE*/)
 {
 
 
-    float fElapsedTime = executeCuda([&]()
-                                     { function(m_eGaussianData, eCase); }, // ;
+    float fElapsedTime = executeCuda(std::forward<Function>(function),
                                      m_eConfig.m_bBenchmark,
                                      m_eConfig.m_iGPUWarmUps,
                                      m_eConfig.m_iIterations);
@@ -358,7 +441,7 @@ void AlgorithmRunner::benchmark(Function &&function,
     assert(oImage.cols == static_cast<int>(m_eGaussianData.m_eCudaExecutionContext.m_iWidth));
 
     auto [iWidth, iHeight] = oImage.size();
-    const std::string &sPath = GetBenchmarkDir() + sAlgorithm + sVersion + ".csv";
+    const std::string& sPath = GetBenchmarkDir() + sAlgorithm + sVersion + ".csv";
     BenchmarResult oBenchmarResult{iWidth, iHeight,
                                    *m_eConfig.m_iKernelSize,
                                    m_eConfig.m_iGPUWarmUps,

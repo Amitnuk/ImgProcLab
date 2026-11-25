@@ -1,5 +1,5 @@
-#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
-#include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianCuda.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianData.hpp"
 #include "common/ImgProcLabUtils.hpp"
 #include "cuda/common/CudaExecutionContext.hpp"
 #include <stdexcept>
@@ -8,9 +8,9 @@ namespace ImgProcLab::detail
 {
 
     constexpr int CHANNELS = 3;
-    __global__ void GaussianFilterKernelHorizontalV2(const uchar *pIn,
-                                                     float *pOut,
-                                                     const float *pKernel,
+    __global__ void GaussianFilterKernelHorizontalV2(const uchar* pIn,
+                                                     float* pOut,
+                                                     const float* pKernel,
                                                      int iHeight,
                                                      int iWidth,
                                                      const std::size_t iKernelSize = 3)
@@ -31,7 +31,7 @@ namespace ImgProcLab::detail
                 {
                     int iKernelIndex = x + iHalf;
                     int iImageIndex = (row * iWidth + iCol) * CHANNELS;
-                    const float &fWeights = pKernel[iKernelIndex];
+                    const float& fWeights = pKernel[iKernelIndex];
                     vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeights;
                     vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeights;
                     vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fWeights;
@@ -46,9 +46,9 @@ namespace ImgProcLab::detail
         }
     }
 
-    __global__ void GaussianFilterKernelVerticalV2(const float *pIn,
-                                                   uchar *pOut,
-                                                   const float *pKernel,
+    __global__ void GaussianFilterKernelVerticalV2(const float* pIn,
+                                                   uchar* pOut,
+                                                   const float* pKernel,
                                                    int iHeight,
                                                    int iWidth,
                                                    const std::size_t iKernelSize = 3)
@@ -69,7 +69,7 @@ namespace ImgProcLab::detail
                 {
                     int iKernelIndex = y + iHalf;
                     int iInmageIndex = (iRow * iWidth + col) * CHANNELS;
-                    const float &fWeights = pKernel[iKernelIndex];
+                    const float& fWeights = pKernel[iKernelIndex];
                     vBGR[0] += pIn[iInmageIndex + 0] * fWeights;
                     vBGR[1] += pIn[iInmageIndex + 1] * fWeights;
                     vBGR[2] += pIn[iInmageIndex + 2] * fWeights;
@@ -84,13 +84,13 @@ namespace ImgProcLab::detail
         }
     }
 
-    void gaussianV2(GaussianData &eData, Separable eCase /*=Separable::FALSE*/)
+    void gaussianV2(GaussianData& eData, Separable eCase /*=Separable::FALSE*/)
     {
 
-        CudaExecutionContext &eCudaContext = eData.m_eCudaExecutionContext;
+        CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;
 
-        const int &iHeight = eCudaContext.m_iHeight;
-        const int &iWidth = eCudaContext.m_iWidth;
+        const int& iHeight = eCudaContext.m_iHeight;
+        const int& iWidth = eCudaContext.m_iWidth;
 
         const int iGridDimX = (iWidth + CONSTANTS::BLOCK_DIM_X - 1) / CONSTANTS::BLOCK_DIM_X;
         const int iGridDimY = (iHeight + CONSTANTS::BLOCK_DIM_Y - 1) / CONSTANTS::BLOCK_DIM_Y;

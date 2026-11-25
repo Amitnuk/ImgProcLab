@@ -1,5 +1,5 @@
-#include "ImgProc/cuda/gaussian/GaussianCuda.hpp"
-#include "ImgProc/cuda/gaussian/GaussianData.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianCuda.hpp"
+#include "ImgProc/cuda/filters/gaussian/GaussianData.hpp"
 #include "common/ImgProcLabUtils.hpp"
 #include "cuda/common/CudaExecutionContext.hpp"
 #include <stdexcept>
@@ -11,8 +11,8 @@ namespace ImgProcLab
     {
         extern __constant__ float GFILTER[CONSTANTS::MAX_KERNEL_SIZE * CONSTANTS::MAX_KERNEL_SIZE];
         constexpr int CHANNELS = 3;
-        __global__ void GaussianFilterKernelV3(const uchar *pIn,
-                                               uchar *pOut,
+        __global__ void GaussianFilterKernelV3(const uchar* pIn,
+                                               uchar* pOut,
                                                int iHeight,
                                                int iWidth,
                                                const std::size_t iKernelSize = 3)
@@ -36,7 +36,7 @@ namespace ImgProcLab
                         {
                             int iImageIndex = (iRow * iWidth + iCol) * CHANNELS;
                             int iKernelIndex = (y + iHalf) * iKernelSize + (x + iHalf);
-                            const float &fWeight = GFILTER[iKernelIndex];
+                            const float& fWeight = GFILTER[iKernelIndex];
 
                             vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeight;
                             vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeight;
@@ -52,8 +52,8 @@ namespace ImgProcLab
             }
         }
 
-        __global__ void GaussianFilterKernelHorizontalV3(const uchar *pIn,
-                                                         float *pOut,
+        __global__ void GaussianFilterKernelHorizontalV3(const uchar* pIn,
+                                                         float* pOut,
                                                          int iHeight,
                                                          int iWidth,
                                                          const std::size_t iKernelSize = 3)
@@ -75,7 +75,7 @@ namespace ImgProcLab
 
                         int iImageIndex = (row * iWidth + iCol) * CHANNELS;
                         int iKernelIndex = x + iHalf;
-                        const float &fWeights = GFILTER[iKernelIndex];
+                        const float& fWeights = GFILTER[iKernelIndex];
                         vBGR[0] += static_cast<float>(pIn[iImageIndex + 0]) * fWeights;
                         vBGR[1] += static_cast<float>(pIn[iImageIndex + 1]) * fWeights;
                         vBGR[2] += static_cast<float>(pIn[iImageIndex + 2]) * fWeights;
@@ -88,8 +88,8 @@ namespace ImgProcLab
             }
         }
 
-        __global__ void GaussianFilterKernelVerticalV3(const float *pIn,
-                                                       uchar *pOut,
+        __global__ void GaussianFilterKernelVerticalV3(const float* pIn,
+                                                       uchar* pOut,
                                                        int iHeight,
                                                        int iWidth,
                                                        const std::size_t iKernelSize = 3)
@@ -111,7 +111,7 @@ namespace ImgProcLab
 
                         int iImageIndex = (iRow * iWidth + col) * CHANNELS;
                         int iKernelIndex = y + iHalf;
-                        const float &fWeights = GFILTER[iKernelIndex];
+                        const float& fWeights = GFILTER[iKernelIndex];
                         vBGR[0] += pIn[iImageIndex + 0] * fWeights;
                         vBGR[1] += pIn[iImageIndex + 1] * fWeights;
                         vBGR[2] += pIn[iImageIndex + 2] * fWeights;
@@ -124,14 +124,14 @@ namespace ImgProcLab
             }
         }
 
-        void gaussianV3(GaussianData &eData,
+        void gaussianV3(GaussianData& eData,
                         const Separable eCase /*= Separable::FALSE*/)
         {
 
-            CudaExecutionContext &eCudaContext = eData.m_eCudaExecutionContext;
+            CudaExecutionContext& eCudaContext = eData.m_eCudaExecutionContext;
 
-            const int &iHeight = eCudaContext.m_iHeight;
-            const int &iWidth = eCudaContext.m_iWidth;
+            const int& iHeight = eCudaContext.m_iHeight;
+            const int& iWidth = eCudaContext.m_iWidth;
 
             int iGridDimX = (iWidth + CONSTANTS::BLOCK_DIM_X - 1) / CONSTANTS::BLOCK_DIM_X;
             int iGridDimY = (iHeight + CONSTANTS::BLOCK_DIM_Y - 1) / CONSTANTS::BLOCK_DIM_Y;

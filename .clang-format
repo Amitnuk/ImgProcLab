@@ -3,6 +3,7 @@ BasedOnStyle: Microsoft
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
+IndentCaseLabels: true
 
 Language: Cpp
 
@@ -14,6 +15,12 @@ BreakConstructorInitializers: BeforeColon
 ConstructorInitializerIndentWidth: 0
 PackConstructorInitializers: BinPack
 NamespaceIndentation: All
+
+AllowShortFunctionsOnASingleLine: All
+
+
+PointerAlignment: Left
+ReferenceAlignment: Left
 
 
 
